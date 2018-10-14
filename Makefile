@@ -11,11 +11,11 @@ clean:
 run: floppy.bin
 	qemu-system-i386 -drive format=raw,index=0,if=floppy,file=$<
 
+# see .gdbinit for gdb settings
 debug: floppy.bin
 	qemu-system-i386 -S -s \
 			-drive format=raw,index=0,if=floppy,file=$< &	
-	$(GDB) -ex "target remote localhost:1234" \
-			-ex "set disassembly-flavor intel"
+	$(GDB)
 
 floppy.bin: bootsector/bootsector.bin
 	cat $^ > $@
