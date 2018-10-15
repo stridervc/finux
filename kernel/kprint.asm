@@ -36,51 +36,70 @@ get_cursor:
 	pop dx
 	ret
 
+; set cursor offset from ax
+set_cursor:
+	pusha
+
+	; divide by 2 for char+attr pairs
+	mov dx, 0
+	mov cx, 2
+	div cx
+
+	push ax
+	mov al, 15		; low byte
+	mov dx, SCREEN_CTRL
+	out dx, al
+
+	pop ax
+	mov dx, SCREEN_DATA
+	out dx, al
+
+	push ax
+	mov al, 14		; high byte
+	mov dx, SCREEN_CTRL
+	out dx, al
+
+	pop ax
+	shr ax, 8
+	mov dx, SCREEN_DATA
+	out dx, al
+
+	popa
+	ret
+
 ; Kernel print, print null terminated string at [bx] to screen
 ; at current cursor position
 kprint:
 	pusha
-	call get_cursor			; Offset in AX
+	mov dh, LGRAY_ON_BLACK
 	
 kprint_loop:
 	mov dl, [bx]			; Char to print
 	cmp dl, 0
 	je kprint_done
 	
+	call kprint_char
 	inc bx					; next char in str
-	push bx
-	mov ebx, 0
-	mov bx, ax				; screen offset into bx
-	mov byte [VIDEO_ADDRESS+ebx], dl
-	mov byte [VIDEO_ADDRESS+ebx+1], LGRAY_ON_BLACK
-	add ax, 2				; move offset to next char
-	pop bx					; restore bx to index in string
 	jmp kprint_loop
 
 kprint_done:
-	; update cursor position
-	mov dx, 0
-	mov bx, 2
-	div bx					; divide ax by 2 for char+attr pair
+	popa
+	ret
 
-	push ax
-	mov dx, SCREEN_CTRL
-	mov al, 15
-	out dx, al				; low byte
+; Print char at current cursor pos, advance cursor
+; DL = char
+; DH = attr
+kprint_char:
+	pusha
+	call get_cursor		; AX = cursor offset
 
-	pop ax
-	mov dx, SCREEN_DATA
-	out dx, al
+	mov ebx, 0
+	mov bx, ax
+	mov [VIDEO_ADDRESS+ebx], dx
 
-	push ax
-	mov dx, SCREEN_CTRL
-	mov al, 14
-	out dx, al				; high byte
-
-	pop ax
-	shr ax, 8
-	mov dx, SCREEN_DATA
-	out dx, al
+	; advance cursor
+	add ax, 2
+	call set_cursor
 
 	popa
 	ret
