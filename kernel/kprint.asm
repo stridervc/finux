@@ -4,6 +4,7 @@ VIDEO_ADDRESS 	equ 0xb8000
 MAX_ROWS 		equ 25
 MAX_COLS 		equ 80
 WHITE_ON_BLACK	equ 0x0f
+LGRAY_ON_BLACK	equ 0x07
 
 ; screen i/o ports
 SCREEN_CTRL		equ 0x3d4
@@ -51,7 +52,7 @@ kprint_loop:
 	mov ebx, 0
 	mov bx, ax				; screen offset into bx
 	mov byte [VIDEO_ADDRESS+ebx], dl
-	mov byte [VIDEO_ADDRESS+ebx+1], WHITE_ON_BLACK
+	mov byte [VIDEO_ADDRESS+ebx+1], LGRAY_ON_BLACK
 	add ax, 2				; move offset to next char
 	pop bx					; restore bx to index in string
 	jmp kprint_loop

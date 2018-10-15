@@ -10,4 +10,4 @@ jmp $			; Infinite loop
 
 ; data
 MSG_NEWLINE	db 0x0d, 0x0a, 0
-MSG_KERNEL	db "Kernel starting...", 0
+MSG_KERNEL	db "Finux 0.0.1 starting", 0
