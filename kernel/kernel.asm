@@ -1,7 +1,11 @@
 [org 0x1000]	; Kernel will be loaded to this address
 [bits 32]		; We're already in protected mode 
 
+mov bx, MSG_NEWLINE
+call kprint
 mov bx, MSG_KERNEL
+call kprint
+mov bx, MSG_NEWLINE
 call kprint
 
 jmp $			; Infinite loop

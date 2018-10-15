@@ -93,6 +93,12 @@ kprint_char:
 	pusha
 	call get_cursor		; AX = cursor offset
 
+	cmp dl, 0x0d		; \r
+	je cr
+
+	cmp dl, 0x0a		; \n
+	je newline
+
 	mov ebx, 0
 	mov bx, ax
 	mov [VIDEO_ADDRESS+ebx], dx
@@ -100,7 +106,29 @@ kprint_char:
 	; advance cursor
 	add ax, 2
 	call set_cursor
+	jmp kprint_char_done
 
+; carriage return
+; move cursor to start of current line
+cr:
+	; everything here is *2 because we're working
+	; with char+attr pairs
+	mov bl, MAX_COLS*2
+	div bl
+	mov ah, 0		; remainder was in ah
+	mov bl, MAX_COLS*2
+	mul bl
+	call set_cursor
+	jmp kprint_char_done
+
+; newline
+; move cursor to same col in next line
+newline:
+	add ax, MAX_COLS*2
+	call set_cursor
+	; jmp kprint_char_done
+
+kprint_char_done:
 	popa
 	ret
 
