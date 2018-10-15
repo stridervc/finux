@@ -1,6 +1,8 @@
 [org 0x7c00]	; boot sector is loaded to this address in memory
 [bits 16]		; we start in real mode
 
+KERNEL_OFFSET	equ 0x1000	; Where we'll load the kernel to
+
 ; BIOS sets dl to the boot drive, save it
 mov	[BOOT_DRIVE], dl		
 
@@ -15,8 +17,11 @@ call print_hex		; dl = boot disk from bios
 mov bx, MSG_NEWLINE
 call print
 
-; TODO load next stage from disk 
-; before switching to protected mode
+; load kernel from disk 
+mov bx, KERNEL_OFFSET
+mov dh, 32
+mov dl, [BOOT_DRIVE]
+call disk_load
 
 ; switch to protected mode
 mov bx, MSG_PM
@@ -33,6 +38,7 @@ mov cr0, eax
 jmp CODE_SEG:init_pm	; far jump by using a different segment
 
 %include "biosprint.asm"
+%include "biosdisk.asm"
 
 ; data
 BOOT_DRIVE		db 0	; Place to store boot drive from BIOS
@@ -52,8 +58,8 @@ mov gs, ax
 mov ebp, 0x90000	; update the stack at the top of the free space
 mov esp, ebp
 
-; we're in protected mode here
-jmp $
+; we're in protected mode here, pass control to kernel
+jmp KERNEL_OFFSET
 
 %include "gdt.asm"
 
