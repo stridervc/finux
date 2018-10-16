@@ -1,5 +1,5 @@
 [org 0x1000]	; Kernel will be loaded to this address
-[bits 32]		; We're already in protected mode 
+[bits 32]		; We're in protected mode
 
 mov bx, MSG_NEWLINE
 call kprint
