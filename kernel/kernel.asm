@@ -8,10 +8,23 @@ call kprint
 mov bx, MSG_NEWLINE
 call kprint
 
+; load idt
+mov bx, MSG_IDT
+call kprint
+lidt [idt_reg]
+mov bx, MSG_NEWLINE
+call kprint
+
+; test interrupt
+int 0x80
+
 jmp $			; Infinite loop
 
 %include "kprint.asm"
+%include "interrupts.asm"
+%include "idt.asm"
 
 ; data
 MSG_NEWLINE	db 0x0d, 0x0a, 0
 MSG_KERNEL	db "Finux 0.0.1", 0
+MSG_IDT		db "Loading IDT...", 0
