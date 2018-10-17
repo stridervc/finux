@@ -35,7 +35,7 @@ lgdt [gdt_descriptor]
 mov eax, cr0
 or eax, 0x01			; set 32-bit mode in cr0
 mov cr0, eax
-jmp CODE_SEG:init_pm	; far jump by using a different segment
+jmp CODE_SEG:init_pm	; update cs with far jump
 
 %include "biosprint.asm"
 %include "biosdisk.asm"
