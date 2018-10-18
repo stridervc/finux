@@ -18,11 +18,15 @@ call kprint
 ; test interrupt
 int 0x80
 
+; initialise PICs
+call init_pic
+
 jmp $			; Infinite loop
 
 %include "kprint.asm"
 %include "interrupts.asm"
 %include "idt.asm"
+%include "pic.asm"
 
 ; data
 MSG_NEWLINE	db 0x0d, 0x0a, 0
