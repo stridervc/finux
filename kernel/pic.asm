@@ -31,9 +31,36 @@ init_pic:
 	out PIC1D, al
 	out PIC2D, al
 
-	mov al, 0			; set pic masks
+	mov al, 0			; set pic masks (allow all interrupts)
 	out PIC1D, al
 	out PIC2D, al
 
+	pop ax
+	ret
+
+; acknowledge PIC
+; call with AL = interrupt number
+ack_pic:
+	push ax
+
+	cmp al, 0x20		; PIC1 start
+	jl .ret
+
+	cmp al, 0x2f		; PIC2 end
+	jg .ret
+
+	cmp al, 0x28		; PIC2 start
+	jl	.ack_pic1
+
+	; ack pic2
+	mov al, 0x20
+	out PIC2C, al
+	jmp .ret
+
+.ack_pic1:
+	mov al, 0x20
+	out PIC1C, al
+
+.ret:
 	pop ax
 	ret
