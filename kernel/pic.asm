@@ -24,8 +24,8 @@ init_pic:
 	mov al, 0x04		; tell master that there is a slave
 	out PIC1D, al		; at IRQ2 (mask 0000 0100b)
 
-	mov al, 0x02		; tell slave pic to use IRQ2
-	out PIC2D, al		; to cascade (mask 0000 0010b)
+	mov al, 0x02		; tell slave pic it's cascade id
+	out PIC2D, al		; (mask 0000 0010b)
 
 	mov al, 0x01		; 8086/88 (MCS-80/85) mode ?
 	out PIC1D, al
@@ -44,13 +44,13 @@ ack_pic:
 	push ax
 
 	cmp al, 0x20		; PIC1 start
-	jl .ret
+	jb .ret
 
 	cmp al, 0x2f		; PIC2 end
-	jg .ret
+	ja .ret
 
 	cmp al, 0x28		; PIC2 start
-	jl	.ack_pic1
+	jb	.ack_pic1
 
 	; ack pic2
 	mov al, 0x20

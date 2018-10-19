@@ -22,8 +22,7 @@ call init_pic
 mov bx, MSG_NEWLINE
 call kprint
 
-; test interrupt
-int 0x80
+sti				; Enable interrupts
 
 jmp $			; Infinite loop
 

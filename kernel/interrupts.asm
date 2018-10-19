@@ -16,12 +16,20 @@ error_code_interrupt_handler_%1:
 %endmacro
 
 common_interrupt_handler:
-	pusha			; save registers
+	;pusha			; save registers
+	push eax
+	push ebx
 	
+	; get interrupt number from stack
+	mov eax, [esp+8]
+	call ack_pic
+
 	mov bx, MSG_INTERRUPT_HANDLER
 	call kprint
 
-	popa			; restore registers
+	pop ebx
+	pop eax
+	;popa			; restore registers
 
 	; because we added an error code and interrupt number
 	; to the stack
@@ -29,7 +37,7 @@ common_interrupt_handler:
 	iret
 
 ; data
-MSG_INTERRUPT_HANDLER db "Interrupt received", 0x0d, 0x0a, 0
+MSG_INTERRUPT_HANDLER db ".", 0
 
 ; create interrupt handlers for each interrupt
 no_error_code_interrupt_handler 0
