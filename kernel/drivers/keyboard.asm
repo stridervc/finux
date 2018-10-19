@@ -1,31 +1,58 @@
-; Handle keyboard interrupts
+; Handle keyboard interrupt
 
 KEYB_C	equ 0x64	; Keyboard command port
 KEYB_D	equ 0x60	; Keyboard data port
 
+; key buffer
+BUFFERSIZE 	equ 256				; Max size of keybuffer
+keybuffer 	resb BUFFERSIZE		; Key buffer
+keybufferi 	db 0				; Current key buffer index
+scancode	db 0				; Store current scancode
+
+MSG_ENTER db 0x0d, 0x0a, "> ", 0
+
+%include "drivers/scancodes.asm"
+
 keyboard_int:
 	push ax
 	push bx
+	push dx
 
-	in al, KEYB_D	; read scancode
+	in al, KEYB_D				; read scancode
 
-	cmp al, 0x10	; Q pressed?
-	jne .other
+	mov [scancode], al			; store scancode
+	cmp al, 128					; check if bit 8 is set
+	ja	.done					; ignore if it's a release
 
-	; q pressed
-	mov bx, MSG_Q
-	call kprint
+	cmp byte [scancode], 0x1c	; enter pressed
+	je .enter
+
+	; key pressed, add it to keybuffer
+	mov bx, keybufferi
+	mov ax, [scancode]
+	mov [keybuffer+bx], al
+	inc bx						; Todo check against BUFFERSIZE
+	mov [keybufferi], bl
+
+	; and print it to the screen
+	mov bx, 0
+	mov bl, [scancode]
+	cmp bx, scancodes_end-scancodes
+	ja .done
+
+	mov dl, [scancodes+bx]
+	mov dh, LGRAY_ON_BLACK
+	call kprint_char
 	jmp .done
 
-.other
-	mov bx, MSG_KEYBOARD
+.enter:
+	mov bx, MSG_ENTER
 	call kprint
+	mov byte [keybufferi], 0		; clear keybuffer
 
-.done
+.done:
+	pop dx
 	pop bx
 	pop ax
 	ret
 
-; data
-MSG_KEYBOARD db ".", 0
-MSG_Q db "Q", 0

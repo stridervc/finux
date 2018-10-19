@@ -24,6 +24,11 @@ call kprint
 
 sti				; Enable interrupts
 
+mov bx, MSG_NEWLINE
+call kprint
+mov bx, MSG_PROMPT
+call kprint
+
 jmp $			; Infinite loop
 
 %include "kprint.asm"
@@ -36,3 +41,5 @@ MSG_NEWLINE	db 0x0d, 0x0a, 0
 MSG_KERNEL	db "Finux 0.0.1", 0
 MSG_IDT		db "Loading IDT...", 0
 MSG_PIC		db "Initialising PICs...", 0
+MSG_PROMPT	db "> ", 0
+
