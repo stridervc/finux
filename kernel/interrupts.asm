@@ -16,14 +16,14 @@ error_code_interrupt_handler_%1:
 %endmacro
 
 common_interrupt_handler:
-	pusha		; save registers
+	pusha			; save registers
 	
 	mov bx, MSG_INTERRUPT_HANDLER
 	call kprint
 
-	popa		; restore registers
+	popa			; restore registers
 
-	; because we added an error code and interrupt number 
+	; because we added an error code and interrupt number
 	; to the stack
 	add esp, 8
 	iret

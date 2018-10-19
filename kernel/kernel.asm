@@ -15,11 +15,15 @@ lidt [idt_reg]
 mov bx, MSG_NEWLINE
 call kprint
 
+; initialise PICs
+mov bx, MSG_PIC
+call kprint
+call init_pic
+mov bx, MSG_NEWLINE
+call kprint
+
 ; test interrupt
 int 0x80
-
-; initialise PICs
-call init_pic
 
 jmp $			; Infinite loop
 
@@ -32,3 +36,4 @@ jmp $			; Infinite loop
 MSG_NEWLINE	db 0x0d, 0x0a, 0
 MSG_KERNEL	db "Finux 0.0.1", 0
 MSG_IDT		db "Loading IDT...", 0
+MSG_PIC		db "Initialising PICs...", 0

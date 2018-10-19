@@ -55,7 +55,7 @@ ack_pic:
 	; ack pic2
 	mov al, 0x20
 	out PIC2C, al
-	jmp .ret
+	;jmp .ret			; Also ack PIC1
 
 .ack_pic1:
 	mov al, 0x20
