@@ -24,5 +24,5 @@ floppy.bin: bootsector/bootsector.bin kernel/kernel.bin
 bootsector/bootsector.bin: bootsector/*.asm
 	nasm -i bootsector/ -f bin -o $@ bootsector/bootsector.asm
 
-kernel/kernel.bin: kernel/*.asm
+kernel/kernel.bin: kernel/*.asm kernel/*/*.asm
 	nasm -i kernel/ -f bin -o $@ kernel/kernel.asm

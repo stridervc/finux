@@ -1,5 +1,7 @@
 ; Interrupt handlers
 
+%include "drivers/keyboard.asm"
+
 %macro no_error_code_interrupt_handler 1
 global interrupt_handler_%1
 interrupt_handler_%1:
@@ -16,32 +18,30 @@ error_code_interrupt_handler_%1:
 %endmacro
 
 common_interrupt_handler:
-	;pusha			; save registers
 	push eax
-	push ebx
 	
 	; get interrupt number from stack
-	mov eax, [esp+8]
-	call ack_pic
+	mov eax, [esp+4]
+	push eax		; push interrupt number onto stack again
 
 	cmp eax, 0x21	; Keyboard interrupt?
-	jne .done
+	je .keyboard
+	jmp .done
 
-	mov bx, MSG_KEYBOARD
-	call kprint
+.keyboard:
+	call keyboard_int
+	jmp .done
 
 .done:
-	pop ebx
+	pop eax			; get interrupt number from stack
+	call ack_pic	; acknowledge PICs
+
 	pop eax
-	;popa			; restore registers
 
 	; because we added an error code and interrupt number
 	; to the stack
 	add esp, 8
 	iret
-
-; data
-MSG_KEYBOARD db ".", 0
 
 ; create interrupt handlers for each interrupt
 no_error_code_interrupt_handler 0
