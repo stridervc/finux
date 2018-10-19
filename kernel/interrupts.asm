@@ -24,9 +24,13 @@ common_interrupt_handler:
 	mov eax, [esp+8]
 	call ack_pic
 
-	mov bx, MSG_INTERRUPT_HANDLER
+	cmp eax, 0x21	; Keyboard interrupt?
+	jne .done
+
+	mov bx, MSG_KEYBOARD
 	call kprint
 
+.done:
 	pop ebx
 	pop eax
 	;popa			; restore registers
@@ -37,7 +41,7 @@ common_interrupt_handler:
 	iret
 
 ; data
-MSG_INTERRUPT_HANDLER db ".", 0
+MSG_KEYBOARD db ".", 0
 
 ; create interrupt handlers for each interrupt
 no_error_code_interrupt_handler 0
