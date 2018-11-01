@@ -10,6 +10,7 @@ keybufferi 	db 0				; Current key buffer index
 scancode	db 0				; Store current scancode
 
 MSG_ENTER db 0x0d, 0x0a, "> ", 0
+MSG_BACKSPACE db 0x0e, 0
 
 %include "drivers/scancodes.asm"
 
@@ -24,8 +25,11 @@ keyboard_int:
 	cmp al, 128					; check if bit 8 is set
 	ja	.done					; ignore if it's a release
 
-	cmp byte [scancode], 0x1c	; enter pressed
+	cmp al, 0x1c				; enter pressed
 	je .enter
+
+	cmp al, 0x0e
+	je .backspace
 
 	; key pressed, add it to keybuffer
 	;mov bx, keybufferi
@@ -48,7 +52,13 @@ keyboard_int:
 .enter:
 	mov bx, MSG_ENTER
 	call kprint
-	mov byte [keybufferi], 0		; clear keybuffer
+	;mov byte [keybufferi], 0		; clear keybuffer
+	jmp .done
+
+.backspace
+	mov bx, MSG_BACKSPACE
+	call kprint
+	;jmp .done
 
 .done:
 	pop dx
