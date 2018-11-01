@@ -28,11 +28,11 @@ keyboard_int:
 	je .enter
 
 	; key pressed, add it to keybuffer
-	mov bx, keybufferi
-	mov ax, [scancode]
-	mov [keybuffer+bx], al
-	inc bx						; Todo check against BUFFERSIZE
-	mov [keybufferi], bl
+	;mov bx, keybufferi
+	;mov ax, [scancode]
+	;mov [keybuffer+bx], al
+	;inc bx						; Todo check against BUFFERSIZE
+	;mov [keybufferi], bl
 
 	; and print it to the screen
 	mov bx, 0

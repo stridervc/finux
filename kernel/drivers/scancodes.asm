@@ -2,7 +2,7 @@ scancodes:
 	db '?'		; unused
 	db '?'		; esc
 	db '1234567890-='
-	db '?'		; backspace
+	db 0x0e		; backspace
 	db '?'		; tab
 	db 'qwertyuiop[]'
 	db '?'		; enter

@@ -99,6 +99,9 @@ kprint_char:
 	cmp dl, 0x0a		; \n
 	je .newline
 
+	cmp dl, 0x0e		; backspace
+	je .backspace
+
 	mov ebx, 0
 	mov bx, ax
 	mov [VIDEO_ADDRESS+ebx], dx
@@ -130,6 +133,17 @@ kprint_char:
 
 	add ax, MAX_COLS*2
 	call set_cursor
+	jmp .kprint_char_done
+
+; backspace
+; move cursor one back and print a space
+.backspace:
+	sub ax, 2		; move cursor back 1 space
+	mov ebx, 0
+	mov bx, ax
+	mov dl, 0		; char = 0, dh should still be attr
+	mov [VIDEO_ADDRESS+ebx], dx
+	call set_cursor	; set cursor from ax
 	jmp .kprint_char_done
 
 .scroll:
