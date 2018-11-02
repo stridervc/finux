@@ -18,6 +18,9 @@ debug: floppy.bin
 			-drive format=raw,index=0,if=floppy,file=$< &	
 	$(GDB)
 
+test: tests/ringbuffer_test
+	tests/ringbuffer_test
+
 floppy.bin: bootsector/bootsector.bin kernel/kernel.bin
 	cat $^ > $@
 
@@ -26,3 +29,6 @@ bootsector/bootsector.bin: bootsector/*.asm
 
 kernel/kernel.bin: kernel/*.asm kernel/*/*.asm
 	nasm -i kernel/ -f bin -o $@ kernel/kernel.asm
+
+tests/ringbuffer_test: tests/ringbuffer_test.asm kernel/ringbuffer.asm
+	nasm -f elf64 -o $@ $<
