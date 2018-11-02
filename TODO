@@ -1,4 +1,3 @@
-* ringbuffer handler?
 * Change keyboard driver to use unicode, not ascii
 * gets() from keyboard driver
   * keyboard driver should log until enter pressed
