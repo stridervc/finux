@@ -4,12 +4,12 @@ KEYB_C	equ 0x64	; Keyboard command port
 KEYB_D	equ 0x60	; Keyboard data port
 
 ; key buffer
-BUFFERSIZE 	equ 5				; Max size of keybuffer
+BUFFERSIZE 	equ 10				; Max size of keybuffer
 
 ; keybuffer, see ringbuffer.asm
 keybuffer:
-	dw 0			; .start
-	dw 0			; .end
+	dw 0			; .index
+	db 0			; .full
 	dw BUFFERSIZE	; .size
 	resb BUFFERSIZE	; .buffer
 
@@ -17,6 +17,8 @@ scancode	db 0				; Store current scancode
 
 ; debug current keybuffer as null terminated string
 dbgkeybuffer	resb BUFFERSIZE+1	; +1 for null terminated
+clear TIMES BUFFERSIZE db 'x'
+db 0
 
 MSG_ENTER db 0x0d, 0x0a, "> ", 0
 MSG_BACKSPACE db 0x0e, 0
@@ -72,15 +74,24 @@ keyboard_int:
 	; DBG: show keybuffer on screen
 	call get_cursor
 	push ax		; save cursor offset
-	mov ax, 80*2	; 2nd line of screen
+	mov ax, 0	; top left
 	call set_cursor
+
+	; clear dbgkeybuffer
+	mov si, clear
+	mov di, dbgkeybuffer
+	mov cx, BUFFERSIZE
+	cld
+.loop
+	movsb
+	dec cx
+	cmp cx, 0
+	jne .loop
 
 	mov bx, dbgkeybuffer
 	mov cx, BUFFERSIZE
 	call gets
 	call kprint
-	mov bx, keybuffer
-	call rb_dbg
 
 	pop ax
 	call set_cursor	; restore cursor
