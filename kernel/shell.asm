@@ -1,9 +1,16 @@
 ; very basic shell
 
+%include "../lib/string.asm"
+
 SHELLBUFFERSIZE equ 256
 
 MSGSHELLPROMPT db "> ", 0
 MSGSHELLNL db 0x0d, 0x0a, 0
+
+MSGHELLOREPLY db "world", 0x0d, 0x0a, 0
+MSGSHELLUNKNOWN db ": command not found", 0x0d, 0x0a, 0
+
+CMDHELLO db "hello", 0
 
 shellinput resb SHELLBUFFERSIZE+1
 
@@ -32,20 +39,33 @@ shell_input:
 	mov cx, SHELLBUFFERSIZE
 	call gets
 
-	; DBG
-	call kprint
-	mov bx, MSGSHELLNL
-	call kprint
-
 	; clear keyboard buffer
 	call keyboardclear
 
-	; TODO write strcmp
-	; and check for some inputs
+	; check for some inputs
+	mov dx, CMDHELLO
+	call strcmp
+	cmp ax, 0
+	jne .next
+	call cmdhello
+	jmp .matched
 
+.next:
+	call kprint
+	mov bx, MSGSHELLUNKNOWN
+	call kprint
+
+.matched:
 	mov bx, MSGSHELLPROMPT
 	call kprint
 
 	popa
+	ret
+
+cmdhello:
+	push bx
+	mov bx, MSGHELLOREPLY
+	call kprint
+	pop bx
 	ret
 
