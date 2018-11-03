@@ -24,10 +24,7 @@ call kprint
 
 sti				; Enable interrupts
 
-mov bx, MSG_NEWLINE
-call kprint
-mov bx, MSG_PROMPT
-call kprint
+call shell_main
 
 jmp $			; Infinite loop
 
@@ -35,6 +32,7 @@ jmp $			; Infinite loop
 %include "interrupts.asm"
 %include "idt.asm"
 %include "pic.asm"
+%include "shell.asm"
 
 ; data
 MSG_NEWLINE	db 0x0d, 0x0a, 0

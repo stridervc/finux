@@ -148,3 +148,10 @@ rb_bytes:
 	ret
 	numbytes dw 0	; count number of bytes we're returning
 
+; empties and resets a ringbuffer
+; call with bx = address of ringbuffer
+rb_clear:
+	mov word [bx+INDEX], 0
+	mov byte [bx+FULL], 0
+	ret
+

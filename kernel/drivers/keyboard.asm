@@ -4,7 +4,7 @@ KEYB_C	equ 0x64	; Keyboard command port
 KEYB_D	equ 0x60	; Keyboard data port
 
 ; key buffer
-BUFFERSIZE 	equ 10				; Max size of keybuffer
+BUFFERSIZE 	equ 256				; Max size of keybuffer
 
 ; keybuffer, see ringbuffer.asm
 keybuffer:
@@ -54,8 +54,7 @@ keyboard_int:
 	jmp .done
 
 .enter:
-	mov bx, MSG_ENTER
-	call kprint
+	call shell_input
 	jmp .done
 
 .backspace:
@@ -93,5 +92,15 @@ gets:
 	pop cx
 	pop bx
 	pop ax
+	ret
+
+; clear keyboard buffer
+keyboardclear:
+	push bx
+
+	mov bx, keybuffer
+	call rb_clear
+
+	pop bx
 	ret
 
