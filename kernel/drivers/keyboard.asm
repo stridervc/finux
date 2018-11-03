@@ -15,11 +15,6 @@ keybuffer:
 
 scancode	db 0				; Store current scancode
 
-; debug current keybuffer as null terminated string
-dbgkeybuffer	resb BUFFERSIZE+1	; +1 for null terminated
-clear TIMES BUFFERSIZE db 'x'
-db 0
-
 MSG_ENTER db 0x0d, 0x0a, "> ", 0
 MSG_BACKSPACE db 0x0e, 0
 
@@ -71,31 +66,6 @@ keyboard_int:
 	call rb_rembyte				; remove from keybuffer
 
 .done:
-	; DBG: show keybuffer on screen
-	call get_cursor
-	push ax		; save cursor offset
-	mov ax, 0	; top left
-	call set_cursor
-
-	; clear dbgkeybuffer
-	mov si, clear
-	mov di, dbgkeybuffer
-	mov cx, BUFFERSIZE
-	cld
-.loop
-	movsb
-	dec cx
-	cmp cx, 0
-	jne .loop
-
-	mov bx, dbgkeybuffer
-	mov cx, BUFFERSIZE
-	call gets
-	call kprint
-
-	pop ax
-	call set_cursor	; restore cursor
-
 	pop dx
 	pop bx
 	pop ax
@@ -109,11 +79,17 @@ gets:
 	push bx
 	push cx
 
-	mov ax, bx	; destination
+	push bx				; preserve dest
+
+	mov ax, bx			; destination
 	mov bx, keybuffer
 	; cx set by caller
 	call rb_bytes
 	
+	pop bx				; restore dest
+	add bx, ax
+	mov byte [bx], 0	; null terminate
+
 	pop cx
 	pop bx
 	pop ax

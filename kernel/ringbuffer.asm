@@ -89,6 +89,8 @@ rb_bytes:
 	cmp ax, 0
 	je	.done	; sanity check
 
+	mov word [numbytes], 0
+
 	; check which is smaller, the max requested #bytes or the 
 	; current size of our ringbuffer
 	cmp byte [bx+FULL], 0
