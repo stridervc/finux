@@ -2,9 +2,11 @@
 * gets() from keyboard driver
   * keyboard driver should log until enter pressed
   * look into creating syscalls (like linux)
-* Basic shell
 * Allocate memory
 * Dump registers
 * Show keyboard scan codes on screen
 * Dump memory
 * Better keyboard driver
+* Func to print hex value of register
+* Switch to using grub as bootloader
+
