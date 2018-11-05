@@ -1,2 +1,5 @@
 *.bin
 *.o
+*.elf
+mnt
+disk.img
