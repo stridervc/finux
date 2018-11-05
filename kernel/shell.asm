@@ -18,7 +18,7 @@ shellinput resb SHELLBUFFERSIZE+1
 shell_main:
 	pusha 
 
-	mov bx, MSGSHELLPROMPT
+	mov ebx, MSGSHELLPROMPT
 	call kprint
 
 	jmp $
@@ -31,41 +31,41 @@ shell_input:
 	pusha
 	
 	; print newline
-	mov bx, MSGSHELLNL
+	mov ebx, MSGSHELLNL
 	call kprint
 
 	; get keyboard buffer
-	mov bx, shellinput
-	mov cx, SHELLBUFFERSIZE
+	mov ebx, shellinput
+	mov ecx, SHELLBUFFERSIZE
 	call gets
 
 	; clear keyboard buffer
 	call keyboardclear
 
 	; check for some inputs
-	mov dx, CMDHELLO
+	mov edx, CMDHELLO
 	call strcmp
-	cmp ax, 0
+	cmp eax, 0
 	jne .next
 	call cmdhello
 	jmp .matched
 
 .next:
 	call kprint
-	mov bx, MSGSHELLUNKNOWN
+	mov ebx, MSGSHELLUNKNOWN
 	call kprint
 
 .matched:
-	mov bx, MSGSHELLPROMPT
+	mov ebx, MSGSHELLPROMPT
 	call kprint
 
 	popa
 	ret
 
 cmdhello:
-	push bx
-	mov bx, MSGHELLOREPLY
+	push ebx
+	mov ebx, MSGHELLOREPLY
 	call kprint
-	pop bx
+	pop ebx
 	ret
 

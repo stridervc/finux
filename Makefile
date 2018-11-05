@@ -26,7 +26,6 @@ disk.img: grubdisk.img grub.cfg finux.bin
 	sudo losetup -d $(LODEVICE)
 
 finux.bin: kernel/kernel.elf linker.ld
-	#ld -n -o $@ -T linker.ld -m elf_i386 -Ttext 0x100000 kernel/kernel.elf
 	ld -n -o $@ -T linker.ld -m elf_i386 kernel/kernel.elf
 
 kernel/kernel.elf: kernel/*.asm kernel/*/*.asm lib/*.asm

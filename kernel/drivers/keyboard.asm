@@ -23,9 +23,9 @@ MSG_BACKSPACE db 0x0e, 0
 
 ; called when a keyboard interrupt happens
 keyboard_int:
-	push ax
-	push bx
-	push dx
+	push eax
+	push ebx
+	push edx
 
 	in al, KEYB_D				; read scancode
 
@@ -40,13 +40,13 @@ keyboard_int:
 	je .backspace
 
 	; get key pressed
-	mov bx, 0
+	mov ebx, 0
 	mov bl, [scancode]
-	cmp bx, scancodes_end-scancodes
+	cmp ebx, scancodes_end-scancodes
 	ja .done					; unsupported scancode
 
-	mov dl, [scancodes+bx]		; get human key
-	mov bx, keybuffer
+	mov dl, [scancodes+ebx]		; get human key
+	mov ebx, keybuffer
 	call rb_addbyte				; add to keybuffer
 
 	mov dh, LGRAY_ON_BLACK
@@ -58,49 +58,49 @@ keyboard_int:
 	jmp .done
 
 .backspace:
-	mov bx, MSG_BACKSPACE
+	mov ebx, MSG_BACKSPACE
 	call kprint					; remove from screen
 
-	mov bx, keybuffer
+	mov ebx, keybuffer
 	call rb_rembyte				; remove from keybuffer
 
 .done:
-	pop dx
-	pop bx
-	pop ax
+	pop edx
+	pop ebx
+	pop eax
 	ret
 
 ; get current string from keybuffer as null terminated string
 ; bx = address of area to return string
 ; cx = size of the user provided string space
 gets:
-	push ax
-	push bx
-	push cx
+	push eax
+	push ebx
+	push ecx
 
-	push bx				; preserve dest
+	push ebx				; preserve dest
 
-	mov ax, bx			; destination
-	mov bx, keybuffer
+	mov eax, ebx			; destination
+	mov ebx, keybuffer
 	; cx set by caller
 	call rb_bytes
 	
-	pop bx				; restore dest
-	add bx, ax
-	mov byte [bx], 0	; null terminate
+	pop ebx				; restore dest
+	add ebx, eax
+	mov byte [ebx], 0	; null terminate
 
-	pop cx
-	pop bx
-	pop ax
+	pop ecx
+	pop ebx
+	pop eax
 	ret
 
 ; clear keyboard buffer
 keyboardclear:
-	push bx
+	push ebx
 
-	mov bx, keybuffer
+	mov ebx, keybuffer
 	call rb_clear
 
-	pop bx
+	pop ebx
 	ret
 

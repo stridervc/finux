@@ -1,6 +1,7 @@
 ; Interrupt descriptor table
 
-CODE_SEG equ 0x08	; the code segment as set in our GDT
+; CODE_SEG is defined in gdt.asm
+;CODE_SEG equ 0x08	; the code segment as set in our GDT
 
 %define low_16(handler) (handler-$$+0x1000) & 0xffff 
 %define high_16(handler) (handler-$$+0x1000) >> 16

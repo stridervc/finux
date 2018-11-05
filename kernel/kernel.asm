@@ -23,7 +23,6 @@ header_end:
 section .text
 [bits 32]				; We're in protected mode
 start:
-; TODO set up stack
 
 cmp eax, 0x36d76289		; check if we were loaded by multiboot2
 jne .nope
@@ -34,40 +33,56 @@ jmp .done
 mov byte [0xb8000], 'X'
 
 .done:
-mov ebx, MSG_NEWLINE
-call kprint
+; load gdt
+lgdt [gdt_descriptor]
+
+; update segment registers
+mov eax, DATA_SEG
+mov ds, eax
+mov ss, eax
+mov es, eax
+mov fs, eax
+mov gs, eax
+
+; set up stack
+mov ebp, 0x110000
+mov esp, ebp
+
+; print kernel version
 mov ebx, MSG_KERNEL
 call kprint
 mov ebx, MSG_NEWLINE
 call kprint
 
-hlt
+; load idt
+mov ebx, MSG_IDT
+call kprint
+lidt [idt_reg]
+mov ebx, MSG_NEWLINE
+call kprint
 
-;; load idt
-;mov bx, MSG_IDT
-;call kprint
-;lidt [idt_reg]
-;mov bx, MSG_NEWLINE
-;call kprint
+; initialise PICs
+mov ebx, MSG_PIC
+call kprint
+call init_pic
+mov ebx, MSG_NEWLINE
+call kprint
 
-;; initialise PICs
-;mov bx, MSG_PIC
-;call kprint
-;call init_pic
-;mov bx, MSG_NEWLINE
-;call kprint
+; DBG enabling interrupts causing a boot loop
+jmp $
 
-;sti				; Enable interrupts
+sti				; Enable interrupts
 
-;call shell_main
+call shell_main
 
-;jmp $			; Infinite loop
+jmp $			; Infinite loop
 
 %include "kprint.asm"
-;%include "interrupts.asm"
-;%include "idt.asm"
-;%include "pic.asm"
-;%include "shell.asm"
+%include "gdt.asm"
+%include "interrupts.asm"
+%include "idt.asm"
+%include "pic.asm"
+%include "shell.asm"
 
 ; data
 ;section .bss
