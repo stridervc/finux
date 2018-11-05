@@ -3,7 +3,6 @@ LODEVICE := $(shell sudo losetup -f)
 
 .PHONY: all
 
-#all: floppy.bin
 all: disk.img
 
 clean:
@@ -11,9 +10,6 @@ clean:
 	rm -f bootsector/*.o bootsector/*.bin
 	rm -f kernel/*.o kernel/*.bin kernel/*.elf
 	rm -f disk.img
-
-#run: floppy.bin
-#	qemu-system-i386 -drive format=raw,index=0,if=floppy,file=$<
 
 run: disk.img
 	qemu-system-i386 -drive format=raw,index=0,file=$<
@@ -30,7 +26,7 @@ disk.img: grubdisk.img grub.cfg finux.bin
 	sudo losetup -d $(LODEVICE)
 
 finux.bin: kernel/kernel.elf linker.ld
-	#ld -n -o $@ -T linker.ld -m elf_i386 -Ttext 0x1000 kernel/kernel.elf
+	#ld -n -o $@ -T linker.ld -m elf_i386 -Ttext 0x100000 kernel/kernel.elf
 	ld -n -o $@ -T linker.ld -m elf_i386 kernel/kernel.elf
 
 kernel/kernel.elf: kernel/*.asm kernel/*/*.asm lib/*.asm

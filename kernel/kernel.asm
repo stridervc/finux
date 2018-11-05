@@ -21,18 +21,25 @@ header_start:
 header_end:
 
 section .text
-[bits 32]		; We're in protected mode
+[bits 32]				; We're in protected mode
 start:
-mov byte [0xb8000], 'X'
-mov ax, 0xBADF
-hlt
+cmp eax, 0x36d76289		; check if we were loaded by multiboot2
+jne .nope
+mov byte [0xb8000], 'Y'
+jmp .done
 
-;mov bx, MSG_NEWLINE
-;call kprint
-;mov bx, MSG_KERNEL
-;call kprint
-;mov bx, MSG_NEWLINE
-;call kprint
+.nope:
+mov byte [0xb8000], 'X'
+
+.done:
+mov ebx, MSG_NEWLINE
+call kprint
+mov ebx, MSG_KERNEL
+call kprint
+mov ebx, MSG_NEWLINE
+call kprint
+
+hlt
 
 ;; load idt
 ;mov bx, MSG_IDT
@@ -61,6 +68,7 @@ hlt
 ;%include "shell.asm"
 
 ; data
+;section .bss
 MSG_NEWLINE	db 0x0d, 0x0a, 0
 MSG_KERNEL	db "Finux 0.0.1", 0
 MSG_IDT		db "Loading IDT...", 0

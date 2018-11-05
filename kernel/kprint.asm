@@ -74,12 +74,12 @@ kprint:
 	mov dh, LGRAY_ON_BLACK
 	
 .kprint_loop:
-	mov dl, [bx]			; Char to print
+	mov dl, [ebx]			; Char to print
 	cmp dl, 0
 	je .kprint_done
 	
 	call kprint_char
-	inc bx					; next char in str
+	inc ebx					; next char in str
 	jmp .kprint_loop
 
 .kprint_done:
