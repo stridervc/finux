@@ -23,6 +23,8 @@ header_end:
 section .text
 [bits 32]				; We're in protected mode
 start:
+; TODO set up stack
+
 cmp eax, 0x36d76289		; check if we were loaded by multiboot2
 jne .nope
 mov byte [0xb8000], 'Y'
