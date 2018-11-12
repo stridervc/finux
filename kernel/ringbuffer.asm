@@ -6,11 +6,16 @@
 ; .size   resw 1 ; size of the following buffer
 ; .buffer res? ? ; actual ring buffer of size .size
 
+; TODO keep track of the number of entries in the ringbuffer
+
 ; offsets into a ring buffer 
 INDEX 	equ 0
 FULL	equ 2
 SIZE	equ 3
 BUFFER	equ 5
+
+; data
+numbytes dw 0	; count number of bytes we're returning
 
 ; add a byte to a ring buffer
 ; bx = address of ring buffer
@@ -23,22 +28,22 @@ rb_addbyte:
 	push ebx				; preserve start of ring buffer
 
 	mov eax, [ebx+INDEX]	; get current .index
-	add ebx, BUFFER		; point to buffer
+	add ebx, BUFFER			; point to buffer
 	add ebx, eax			; point to .end
 
-	mov [ebx], dl		; store byte
-	inc eax				; inc .end
+	mov [ebx], dl			; store byte
+	inc eax					; inc .end
 
-	pop ebx				; restore start of ring buffer
+	pop ebx					; restore start of ring buffer
 
-	cmp eax, [ebx+SIZE]	; see if .index is within bounds
+	cmp eax, [ebx+SIZE]		; see if .index is within bounds
 	jb .done		
 
-	mov eax, 0			; wrap .index
+	mov eax, 0				; wrap .index
 	mov byte [ebx+FULL], 1	; set .full flag
 
 .done:
-	mov [ebx+INDEX], ax	; store new .index
+	mov [ebx+INDEX], ax		; store new .index
 
 	pop ecx
 	pop ebx
@@ -76,15 +81,15 @@ rb_rembyte:
 	ret
 
 ; get content of ringbuffer as bytes
-; ax = address of location to store result
-; bx = address of ringbuffer
-; cx = max number of bytes to return
+; eax = address of location to store result
+; ebx = address of ringbuffer
+; ecx = max number of bytes to return
 ; return :
-; ax = number of bytes returned
+; eax = number of bytes returned
 rb_bytes:
 	pusha
 	
-	cmp eax, 0
+	cmp ecx, 0
 	je	.done	; sanity check
 
 	mov word [numbytes], 0
@@ -108,16 +113,17 @@ rb_bytes:
 	mov ecx, edx
 
 .continue:
-	mov edi, eax			; point to destination
+	mov edi, eax		; point to destination
 	cld					; clear direction flag
 
-	; two possible cases
-	; ringbuffer is full, start at index+1
-	; or, ringbuffer is not full, start at 0
 	mov esi, ebx
 	add esi, BUFFER		
 
 	mov eax, 0			; keep track of our index
+
+	; two possible cases
+	; ringbuffer is full, start at index+1
+	; or, ringbuffer is not full, start at 0
 	cmp byte [ebx+FULL], 0
 	je .loop
 
@@ -144,7 +150,6 @@ rb_bytes:
 	popa
 	mov eax, [numbytes]
 	ret
-	numbytes dw 0	; count number of bytes we're returning
 
 ; empties and resets a ringbuffer
 ; call with bx = address of ringbuffer
