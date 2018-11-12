@@ -44,6 +44,10 @@ mov es, eax
 mov fs, eax
 mov gs, eax
 
+; far jump to fix cs?
+jmp CODE_SEG:fixcs
+
+fixcs:
 ; set up stack
 mov ebp, 0x110000
 mov esp, ebp
