@@ -3,8 +3,10 @@
 ; CODE_SEG is defined in gdt.asm
 ;CODE_SEG equ 0x08	; the code segment as set in our GDT
 
-%define low_16(handler) (handler-$$+0x1000) & 0xffff 
-%define high_16(handler) (handler-$$+0x1000) >> 16
+;%define low_16(handler) (handler-$$+0x1000) & 0xffff 
+;%define high_16(handler) (handler-$$+0x1000) >> 16
+%define low_16(handler) (handler-$$+0x100000) & 0xffff 
+%define high_16(handler) (handler-$$+0x100000) >> 16
 
 ; see https://wiki.osdev.org/Interrupt_Descriptor_Table
 ; a single IDT entry for a handler with no error code
@@ -33,7 +35,8 @@
 ; to load the idt
 idt_reg:
 	dw idt_end-idt_start-1		; size of idt - 1
-	dd idt_start-$$+0x1000		; address of idt
+	;dd idt_start-$$+0x1000		; address of idt
+	dd idt_start				; address of idt
 
 idt_start:
 	idt_entry 0

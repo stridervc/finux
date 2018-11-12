@@ -68,9 +68,6 @@ call init_pic
 mov ebx, MSG_NEWLINE
 call kprint
 
-; DBG enabling interrupts causing a boot loop
-jmp $
-
 sti				; Enable interrupts
 
 call shell_main

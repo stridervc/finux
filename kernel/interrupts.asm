@@ -5,15 +5,15 @@
 %macro no_error_code_interrupt_handler 1
 global interrupt_handler_%1
 interrupt_handler_%1:
-	push dword 0		; push 0 as error code
-	push dword %1		; push interrupt number
+	push strict dword 0		; push 0 as error code
+	push strict dword %1	; push interrupt number
 	jmp common_interrupt_handler
 %endmacro
 
 %macro error_code_interrupt_handler 1
 global error_code_interrupt_handler_%1
 error_code_interrupt_handler_%1:
-	push dword %1		; push interrupt number
+	push strict dword %1	; push interrupt number
 	jmp common_interrupt_handler
 %endmacro
 
@@ -30,7 +30,7 @@ common_interrupt_handler:
 
 .keyboard:
 	call keyboard_int
-	jmp .done
+	;jmp .done
 
 .done:
 	pop eax			; get interrupt number from stack

@@ -29,7 +29,8 @@ finux.bin: kernel/kernel.elf linker.ld
 	ld -n -o $@ -T linker.ld -m elf_i386 kernel/kernel.elf
 
 kernel/kernel.elf: kernel/*.asm kernel/*/*.asm lib/*.asm
-	nasm -i kernel/ -f elf -o $@ kernel/kernel.asm
+	#nasm -i kernel/ -f elf -o $@ kernel/kernel.asm
+	nasm -g -O0 -i kernel/ -f elf -o $@ kernel/kernel.asm
 
 # see .gdbinit for gdb settings
 debug: disk.img
