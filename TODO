@@ -9,3 +9,4 @@
 * Better keyboard driver
 * Func to print hex value of register
 * Get mem info (and other stuff) from multiboot
+* Hitting enter on shell repeats previous entry
