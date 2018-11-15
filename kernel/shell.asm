@@ -49,13 +49,13 @@ shell_input:
 	call keyboardclear
 
 	; if empty, ignore
-	;mov esi, ebx
-	;call strlen
-	;cmp eax, 0
-	;je .matched
+	mov esi, ebx
+	call strlen
+	cmp eax, 0
+	je .matched
 
 	; check for some inputs
-	mov esi, ebx
+	;mov esi, ebx
 	mov edi, CMDHELLO
 	call strcmp
 	cmp eax, 0

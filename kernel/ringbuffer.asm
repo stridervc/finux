@@ -141,7 +141,7 @@ rb_len:
 	jmp .ret
 
 .empty:
-	mov ax, 0
+	mov eax, 0
 	jmp .ret
 
 .ret:
@@ -198,11 +198,12 @@ rb_bytes:
 
 .ret:
 	popa
-	mov eax, [numbytes]
+	mov eax, 0
+	mov ax, [numbytes]
 	ret
 
 ; empties and resets a ringbuffer
-; call with bx = address of ringbuffer
+; call with ebx = address of ringbuffer
 rb_clear:
 	mov word [ebx+RINDEX], 0
 	mov word [ebx+WINDEX], 0
