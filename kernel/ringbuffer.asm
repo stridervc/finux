@@ -1,83 +1,151 @@
 ; handles ring buffer data structures
 
 ; a ring buffer should be structured as follow:
-; .index  resw 1 ; current index, start at 0
+; .windex resw 1 ; current write index, start at 0
+; .rindex resw 1 ; current read index, start at 0
 ; .full   resb 1 ; is full? start at 0
 ; .size   resw 1 ; size of the following buffer
 ; .buffer res? ? ; actual ring buffer of size .size
 
-; TODO keep track of the number of entries in the ringbuffer
-
 ; offsets into a ring buffer 
-INDEX 	equ 0
-FULL	equ 2
-SIZE	equ 3
-BUFFER	equ 5
+WINDEX 	equ 0
+RINDEX 	equ 2
+FULL	equ 4
+SIZE	equ 5
+BUFFER	equ 7
 
 ; data
-numbytes dw 0	; count number of bytes we're returning
+numbytes dw 0	; count number of bytes we're returning in rb_bytes
 
 ; add a byte to a ring buffer
-; bx = address of ring buffer
+; if not full, write at current w index, then increment 2
+; if w == size after incr, set it to 0
+; after every w increment, check if w == r, if so, set full = 1
+; ebx = address of ring buffer
 ; dl = byte to store
+; return ax = 0 success
+;           = -1 buffer full
 rb_addbyte:
-	push eax
+	; check if ringbuffer is full
+	mov al, [ebx+FULL]
+	cmp al, 1
+	jne .continue
+	
+	mov ax, -1
+	ret
+
+.continue:
 	push ebx
 	push ecx
 
 	push ebx				; preserve start of ring buffer
 
-	mov eax, [ebx+INDEX]	; get current .index
+	mov eax, 0
+	mov ax, [ebx+WINDEX]	; get current .windex
 	add ebx, BUFFER			; point to buffer
-	add ebx, eax			; point to .end
+	add ebx, eax			; point to .windex
 
 	mov [ebx], dl			; store byte
-	inc eax					; inc .end
+	inc ax					; inc .windex
 
 	pop ebx					; restore start of ring buffer
 
-	cmp eax, [ebx+SIZE]		; see if .index is within bounds
-	jb .done		
+	cmp ax, [ebx+SIZE]		; see if .index is within bounds
+	jb .checkcatchup
 
-	mov eax, 0				; wrap .index
+	mov ax, 0				; wrap .windex
+
+.checkcatchup:
+	; check if .windex has caught up to .rindex
+	mov cx, [ebx+RINDEX]
+	cmp ax, cx
+	jne .done
 	mov byte [ebx+FULL], 1	; set .full flag
 
 .done:
-	mov [ebx+INDEX], ax		; store new .index
+	mov [ebx+WINDEX], ax	; store new .windex
+	mov ax, 0				; success
 
+	pop ecx
+	pop ebx
+	ret
+
+; remove byte from end of ring buffer
+; ebx = address of ringbuffer
+rb_rembyte:
+	push eax
+	push ebx
+	push ecx
+	
+	; if we're full, we can definitely remove a byte
+	mov al, [ebx+FULL]
+	cmp al, 1
+	je .continue
+
+	; we're not full, we might be empty
+	mov ax, [ebx+WINDEX]
+	mov cx, [ebx+RINDEX]
+	cmp ax, cx
+	je .ret		; we're empty, nothing to be done
+
+.continue:
+	mov ax, [ebx+WINDEX]
+	cmp ax, 0
+	jne .done
+
+	; wrapback .windex
+	mov ax, [ebx+SIZE]
+
+.done:
+	dec ax
+	mov [ebx+WINDEX], ax
+	mov byte [ebx+FULL], 0
+
+.ret:
 	pop ecx
 	pop ebx
 	pop eax
 	ret
 
-; remove byte from end of ring buffer
-; bx = address of ringbuffer
-rb_rembyte:
-	push edx
-	push ebx
-	
-	mov edx, [ebx+INDEX]
-	cmp edx, 0			; we might be empty
-	jne	.continue
-	cmp byte [ebx+FULL], 0
-	je .done			; we're empty
+; get length of ringbuffer
+; ebx = address of ringbuffer
+; return eax = length of ringbuffer
+rb_len:
+	push ecx
+
+	mov eax, 0
+	mov ecx, 0
+
+	; if we're full, just return size
+	mov al, [ebx+FULL]
+	cmp al, 1
+	jne .continue
+	; we're full
+	mov ax, [ebx+SIZE]
+	jmp .ret
 
 .continue:
-	cmp edx, 0			; should .index wrap back?
-	je .wrapback
-	dec edx
-	mov [ebx+INDEX], edx
-	jmp .done
+	mov ax, [ebx+WINDEX]
+	mov cx, [ebx+RINDEX]
+	cmp ax, cx
+	je .empty
+	jb .wrapped
+	; windex greater than rindex
+	sub ax, cx
+	jmp .ret
 
-.wrapback:
-	mov edx, [bx+SIZE]
-	dec edx
-	mov [ebx+INDEX], edx
-	mov byte [ebx+FULL], 0
+.wrapped:
+	; windex less than rindex
+	add ax, [ebx+SIZE]
+	sub ax, cx
+	jmp .ret
 
-.done:
-	pop ebx
-	pop edx
+.empty:
+	mov ax, 0
+	jmp .ret
+
+.ret:
+	pop ecx
 	ret
 
 ; get content of ringbuffer as bytes
@@ -88,65 +156,47 @@ rb_rembyte:
 ; eax = number of bytes returned
 rb_bytes:
 	pusha
-	
-	cmp ecx, 0
-	je	.done	; sanity check
 
-	mov word [numbytes], 0
+	mov edi, eax	; destination
 
-	; check which is smaller, the max requested #bytes or the 
-	; current size of our ringbuffer
-	cmp byte [ebx+FULL], 0
-	jne .full
+	mov word [numbytes], 0	; in case we return nothing
+	; get length of ringbuffer
+	call rb_len
+	cmp eax, 0
+	je .ret			; nothing to return if it's empty
 
-	mov edx, [ebx+INDEX]
-	cmp edx, 0
-	je .done		; ringbuffer is empty
-	jmp .compare
-
-.full:
-	mov edx, [ebx+SIZE]
-
-.compare:
-	cmp ecx, edx
-	jbe .continue
-	mov ecx, edx
+	; check which is less, requested bytes or available bytes
+	cmp eax, ecx
+	jae .continue
+	mov ecx, eax
 
 .continue:
-	mov edi, eax		; point to destination
-	cld					; clear direction flag
+	; store number of bytes to return
+	mov [numbytes], cx
 
-	mov esi, ebx
-	add esi, BUFFER		
-
-	mov eax, 0			; keep track of our index
-
-	; two possible cases
-	; ringbuffer is full, start at index+1
-	; or, ringbuffer is not full, start at 0
-	cmp byte [ebx+FULL], 0
-	je .loop
-
-	add esi, [ebx+INDEX]	; point to buffer + index
-	mov eax, [ebx+INDEX]
+	mov ax, [ebx+RINDEX]	; keep track of our rindex
+	mov esi, ebx			; source
+	add esi, BUFFER
+	add esi, eax			; set read index
+	cld						; clear direction flag
 
 .loop:
 	movsb
-	inc word [numbytes]
 	dec ecx
-	cmp ecx, 0
-	je .done
-
-	; see if we should wrap our ring buffer
-	inc eax				; keep track of our index in buffer
-	cmp eax, [ebx+SIZE]
-	jb .loop
-	mov eax, 0
+	inc ax					; increment rindex
+	cmp ax, [ebx+SIZE]
+	jne .c2
+	mov ax, 0				; wrap rindex
 	mov esi, ebx
-	add esi, BUFFER
-	jmp .loop
+	add esi, BUFFER			; also wrap the actual ringbuffer
+.c2:
+	cmp ecx, 0
+	jne .loop
 
-.done:
+	mov [ebx+RINDEX], ax	; update rindex
+	mov byte [edi], 0		; null terminate
+
+.ret:
 	popa
 	mov eax, [numbytes]
 	ret
@@ -154,7 +204,8 @@ rb_bytes:
 ; empties and resets a ringbuffer
 ; call with bx = address of ringbuffer
 rb_clear:
-	mov word [ebx+INDEX], 0
+	mov word [ebx+RINDEX], 0
+	mov word [ebx+WINDEX], 0
 	mov byte [ebx+FULL], 0
 	ret
 

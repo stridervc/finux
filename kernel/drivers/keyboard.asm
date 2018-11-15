@@ -8,7 +8,8 @@ BUFFERSIZE 	equ 256				; Max size of keybuffer
 
 ; keybuffer, see ringbuffer.asm
 keybuffer:
-	dw 0			; .index
+	dw 0			; .windex
+	dw 0			; .rindex
 	db 0			; .full
 	dw BUFFERSIZE	; .size
 	resb BUFFERSIZE	; .buffer
