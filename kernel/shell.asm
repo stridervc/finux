@@ -43,7 +43,8 @@ shell_input:
 	call keyboardclear
 
 	; check for some inputs
-	mov edx, CMDHELLO
+	mov esi, ebx
+	mov edi, CMDHELLO
 	call strcmp
 	cmp eax, 0
 	jne .next

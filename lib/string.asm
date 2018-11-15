@@ -2,65 +2,60 @@
 
 ; compare two null terminated strings
 ; return ax = 0 if strings match
-; call with bx and dx as addresses of strings
+; call with esi and edi as address of strings
 strcmp:
-	push cx
-	push si
-	push di
+	push ecx
+	push esi
+	push edi
 
 	; first, see if the lengths match
 	call strlen
-	mov cx, ax		; store length
-	push bx
-	mov bx, dx
+	mov ecx, eax		; store length
+	push esi
+	mov esi, edi
 	call strlen
-	pop bx
+	pop esi
 
-	cmp ax, cx
+	cmp eax, ecx
 	jne .nope
 
 	; now, compare the strings byte for byte
-	; cx = length already
+	; ecx = length already
 	cld
-	mov si, bx
-	mov di, dx
 
 .loop:
 	cmpsb
 	jne .nope
-	dec cx
-	cmp cx, 0
-	;je .match
-	;jmp .loop
+	dec ecx
+	cmp ecx, 0
 	jne .loop
 
 .match:
-	mov ax, 0
+	mov eax, 0
 	jmp .done
 
 .nope:
-	mov ax, 1
+	mov eax, 1
 	;jmp done
 
 .done:
-	pop di
-	pop si
-	pop cx
+	pop edi
+	pop esi
+	pop ecx
 	ret
 
-; returns length of null terminated string in ax
-; call with bx = address of string
+; returns length of null terminated string in eax
+; call with esi = address of string
 strlen:
-	push bx
-
-	mov ax, 0
+	push esi
+	mov eax, 0
 .loop:
-	cmp byte [bx], 0
+	cmp byte [esi], 0
 	je .done
-	inc ax
-	inc bx
+	inc eax
+	inc esi
 	jmp .loop
 
 .done:
-	pop bx
+	pop esi
 	ret
