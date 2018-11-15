@@ -6,4 +6,5 @@
 * Show keyboard scan codes on screen
 * Dump memory
 * Better keyboard driver
-* Get mem info (and other stuff) from multiboot
+* Func to print a decimal from register
+* replace all newline prints with kprint_nl

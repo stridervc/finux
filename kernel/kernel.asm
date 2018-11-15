@@ -26,13 +26,9 @@ start:
 
 cmp eax, 0x36d76289		; check if we were loaded by multiboot2
 jne .nope
-mov byte [0xb8000], 'Y'
-jmp .done
+mov byte [multiboot], 1
 
 .nope:
-mov byte [0xb8000], 'X'
-
-.done:
 ; load gdt
 lgdt [gdt_descriptor]
 
@@ -53,11 +49,18 @@ mov ebp, 0x110000
 mov esp, ebp
 
 ; print kernel version
+push ebx				; preserve boot information from grub
 mov ebx, MSG_KERNEL
 call kprint
 mov ebx, MSG_NEWLINE
 call kprint
 
+pop ebx					; restore multiboot information
+cmp byte [multiboot], 1
+jne .continue
+call multiboot_info
+
+.continue:
 ; load idt
 mov ebx, MSG_IDT
 call kprint
@@ -84,9 +87,11 @@ jmp $			; Infinite loop
 %include "idt.asm"
 %include "pic.asm"
 %include "shell.asm"
+%include "multibootinfo.asm"
 
 ; data
 ;section .bss
+multiboot	db 0	; 1 = multiboot info available
 MSG_NEWLINE	db 0x0d, 0x0a, 0
 MSG_KERNEL	db "Finux 0.0.2", 0
 MSG_IDT		db "Loading IDT...", 0

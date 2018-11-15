@@ -86,6 +86,16 @@ kprint:
 	popa
 	ret
 
+; convenience func to print a newline
+kprint_nl:
+	push ebx
+	mov ebx, .msgnl
+	call kprint
+
+	pop ebx
+	ret
+	.msgnl	db 0x0d, 0x0a, 0
+
 ; Print char at current cursor pos, advance cursor
 ; DL = char
 ; DH = attr
