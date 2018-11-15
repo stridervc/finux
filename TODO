@@ -3,7 +3,6 @@
   * keyboard driver should log until enter pressed
   * look into creating syscalls (like linux)
 * Allocate memory
-* Dump registers
 * Show keyboard scan codes on screen
 * Dump memory
 * Better keyboard driver

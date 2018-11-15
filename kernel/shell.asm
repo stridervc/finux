@@ -1,6 +1,7 @@
 ; very basic shell
 
 %include "../lib/string.asm"
+%include "regdump.asm"
 
 SHELLBUFFERSIZE equ 256
 
@@ -11,18 +12,13 @@ MSGHELLOREPLY db "world", 0x0d, 0x0a, 0
 MSGSHELLUNKNOWN db ": command not found", 0x0d, 0x0a, 0
 
 CMDHELLO db "hello", 0
+CMDREGS db "regs", 0
 
 shellinput resb SHELLBUFFERSIZE+1
 
 ; called by kernel
 shell_main:
 	pusha 
-
-	; test tohex
-	mov eax, 0xdeadbabe
-	call kprint_hexd
-	mov ebx, MSGSHELLNL
-	call kprint
 
 	mov ebx, MSGSHELLPROMPT
 	call kprint
@@ -59,11 +55,19 @@ shell_input:
 	mov edi, CMDHELLO
 	call strcmp
 	cmp eax, 0
-	jne .next
+	jne .next1
 	call cmdhello
 	jmp .matched
 
-.next:
+.next1:
+	mov edi, CMDREGS
+	call strcmp
+	cmp eax, 0
+	jne .next2
+	call regdump
+	jmp .matched
+
+.next2:
 	call kprint
 	mov ebx, MSGSHELLUNKNOWN
 	call kprint
