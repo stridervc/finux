@@ -184,3 +184,94 @@ scroll:
 
 	popa
 	ret
+
+; print hex representation of eax
+kprint_hexd:
+	push eax
+	push ebx
+	push edi
+
+	mov edi, .hexstr+8
+	call tohex
+	shr eax, 8
+	mov edi, .hexstr+6
+	call tohex
+	shr eax, 8
+	mov edi, .hexstr+4
+	call tohex
+	shr eax, 8
+	mov edi, .hexstr+2
+	call tohex
+	mov ebx, .hexstr
+	call kprint
+
+	pop edi
+	pop ebx
+	pop eax
+	ret
+	.hexstr db "0x00000000", 0
+
+; print hex representation of ax
+kprint_hexw:
+	push eax
+	push ebx
+	push edi
+
+	mov edi, .hexstr+4
+	call tohex
+	shr ax, 8
+	mov edi, .hexstr+2
+	call tohex
+	mov ebx, .hexstr
+	call kprint
+
+	pop edi
+	pop ebx
+	pop eax
+	ret
+	.hexstr db "0x0000", 0
+
+; print hex representation of al
+kprint_hexb:
+	push ebx
+	push edi
+
+	mov edi, .hexstr+2
+	call tohex
+	mov ebx, .hexstr
+	call kprint
+
+	pop edi
+	pop ebx
+	ret
+
+	.hexstr db "0x00", 0
+
+; convert al to hex representation
+; call with edi = address of 2 chars to store result
+tohex:
+	push eax
+	push edi
+
+	push eax
+	shr al, 4		; get most significant nibble
+	add al, '0'
+	cmp al, '9'
+	jle .c1
+	add al, 'A' - '0' - 10
+
+.c1:
+	mov [edi], al
+	inc edi
+	pop eax
+	and al, 00001111b	; get least significant nibble
+	add al, '0'
+	cmp al, '9'
+	jle .c2
+	add al, 'A' - '0' - 10
+
+.c2:
+	mov [edi], al
+	pop edi
+	pop eax
+	ret

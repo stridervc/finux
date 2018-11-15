@@ -18,6 +18,12 @@ shellinput resb SHELLBUFFERSIZE+1
 shell_main:
 	pusha 
 
+	; test tohex
+	mov eax, 0xdeadbabe
+	call kprint_hexd
+	mov ebx, MSGSHELLNL
+	call kprint
+
 	mov ebx, MSGSHELLPROMPT
 	call kprint
 
@@ -41,6 +47,12 @@ shell_input:
 
 	; clear keyboard buffer
 	call keyboardclear
+
+	; if empty, ignore
+	;mov esi, ebx
+	;call strlen
+	;cmp eax, 0
+	;je .matched
 
 	; check for some inputs
 	mov esi, ebx
