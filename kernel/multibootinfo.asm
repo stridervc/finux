@@ -32,6 +32,10 @@ multiboot_info:
 	cmp eax, 4
 	je .meminfo
 
+	; unhandled type
+	;call kprint_dec
+	;call kprint_nl
+
 .resume:
 	; edx is size of entry, next entry is 'size' away but padded to 8 bytes
 	mov eax, edx
