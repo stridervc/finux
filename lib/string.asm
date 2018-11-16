@@ -1,5 +1,27 @@
 ; string functions
 
+; copy null terminated string from esi to edi
+strcpy:
+	push eax
+	push ecx
+	push esi
+	push edi
+
+	; get length of source
+	call strlen
+	mov ecx, eax
+
+	cld
+	rep movsb
+
+	mov byte [edi], 0	; null terminate it
+
+	pop edi
+	pop esi
+	pop ecx
+	pop eax
+	ret
+
 ; compare two null terminated strings
 ; return ax = 0 if strings match
 ; call with esi and edi as address of strings

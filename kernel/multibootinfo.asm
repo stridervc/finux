@@ -46,7 +46,7 @@ multiboot_info:
 	dec cx
 	jmp .loop
 
-.commandline
+.commandline:
 	push ebx
 	push ebx
 
@@ -61,7 +61,7 @@ multiboot_info:
 	pop ebx
 	jmp .resume
 
-.bootloader
+.bootloader:
 	push ebx
 	push ebx
 
@@ -76,6 +76,10 @@ multiboot_info:
 	jmp .resume
 
 .meminfo:
+	push ecx
+	push edx
+	push ebx
+
 	push ebx
 	push ebx
 
@@ -83,16 +87,27 @@ multiboot_info:
 	call kprint
 	pop ebx
 	mov eax, [ebx+8]
-	call kprint_hexd
+	inc eax
+	call kprint_dec
+	mov ebx, .msglowerpost
+	call kprint
 	call kprint_nl
 
 	mov ebx, .msgupper
 	call kprint
 	pop ebx
 	mov eax, [ebx+12]
-	call kprint_hexd
+	mov edx, 0			; high part of dividend
+	mov ecx, 1024		; to meg
+	div ecx
+	call kprint_dec
+	mov ebx, .msgupperpost
+	call kprint
 	call kprint_nl
 
+	pop ebx
+	pop edx
+	pop ecx
 	jmp .resume
 
 .ret:
@@ -100,6 +115,8 @@ multiboot_info:
 	ret
 
 	.msglower db "Lower memory: ", 0
+	.msglowerpost db "K", 0
 	.msgupper db "Upper memory: ", 0
+	.msgupperpost db "M", 0
 	.msgbootloader db "Bootloader was: ", 0
 	.msgcommandline db "Command line: ", 0

@@ -285,3 +285,60 @@ tohex:
 	pop edi
 	pop eax
 	ret
+
+; print eax as decimal value to screen
+kprint_dec:
+	pusha
+
+	mov dword [.divisor], 1000000000	; divide by this
+	mov edi, .msgdec					; where to store digit
+
+.loop:
+	push eax
+	mov edx, 0				; high part of dividend, also remainder after div
+	div dword [.divisor]	; divide to get most significant digit
+	mov edx, eax			; store most significant digit
+	add al, '0'				; convert digit to ascii
+	mov [edi], al			; store in string
+	inc edi					; advance string pos
+
+	; remove most significant digit from number
+	mov eax, dword [.divisor]
+	mul edx
+	mov ebx, eax			; ebx = msd * divisor
+	pop eax					; restore number
+	sub eax, ebx			; remove msd
+
+	; divide divisor by 10
+	push eax
+	mov eax, dword [.divisor]
+	mov edx, 0				; high part of dividend
+	mov ebx, 10
+	div ebx
+	mov [.divisor], eax
+	pop eax
+
+	; see if we're done
+	cmp dword [.divisor], 0
+	ja .loop
+
+	; 'shift' the number left to remove leading '0's
+	mov edi, .msgdec
+	mov esi, edi
+	inc esi
+.loop2:
+	cmp byte [edi], '0'
+	jne .continue
+	call strcpy
+	jmp .loop2
+
+.continue:
+	; print the number
+	mov ebx, .msgdec
+	call kprint
+
+.ret:
+	popa
+	ret
+	.msgdec db "4294967296", 0
+	.divisor dd 0
