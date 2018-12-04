@@ -8,6 +8,5 @@
 * Better keyboard driver
 * replace all newline prints with kprint_nl
 * Make dump regs show 2 registers per line
-* Remove grubdisk.img from git
-* Automate grubdisk.img somehow
-* Clean up for github
+* Update README.md for github
+* Add Licence
