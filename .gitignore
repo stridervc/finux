@@ -2,4 +2,4 @@
 *.o
 *.elf
 mnt
-disk.img
+*.img

@@ -1,5 +1,12 @@
 GDB=gdb
-LODEVICE := $(shell sudo losetup -f)
+GRUBTMP=/tmp/grubdisk
+DISKTMP=$(GRUBTMP)/disk.img
+DOCKER=docker
+DOCKERARGS=-v $(GRUBTMP):$(GRUBTMP):rw --device=$(LODEVICE1):$(LODEVICE1) --device=$(LODEVICE2):$(LODEVICE2)
+DOCKERCONTAINER=sid
+DOCKERRUN=$(DOCKER) run $(DOCKERARGS) $(DOCKERCONTAINER)
+LODEVICE1=/dev/loop0
+LODEVICE2=/dev/loop1
 
 .PHONY: all
 
@@ -9,12 +16,29 @@ clean:
 	rm -f floppy.bin
 	rm -f bootsector/*.o bootsector/*.bin
 	rm -f kernel/*.o kernel/*.bin kernel/*.elf
-	rm -f disk.img
+	rm -f disk.img grubdisk.img
 
 run: disk.img
 	qemu-system-i386 -drive format=raw,index=0,file=$<
 
+grubdisk.img:
+	mkdir -p $(GRUBTMP)
+	dd if=/dev/zero of=$(DISKTMP) bs=1M count=32
+	echo "- - L *" | sudo sfdisk $(DISKTMP)
+	sudo losetup $(LODEVICE1) $(DISKTMP)
+	sudo losetup $(LODEVICE2) $(DISKTMP) -o 1048576
+	sudo mke2fs $(LODEVICE2)
+	mkdir $(GRUBTMP)/finux
+	sudo mount $(LODEVICE2) $(GRUBTMP)/finux
+	$(DOCKERRUN) grub-install --root-directory=$(GRUBTMP)/finux --no-floppy --modules="normal part_msdos ext2 multiboot" $(LODEVICE1)
+	sudo umount $(LODEVICE2)
+	sudo losetup -d $(LODEVICE2)
+	sudo losetup -d $(LODEVICE1)
+	cp $(DISKTMP) $@
+	rm -rf $(GRUBTMP)
+
 disk.img: grubdisk.img grub.cfg finux.bin
+	$(eval LODEVICE := $(shell sudo losetup -f))
 	cp -f $< $@
 	mkdir mnt
 	sudo losetup $(LODEVICE) $@ -o 1048576
