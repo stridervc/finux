@@ -6,6 +6,5 @@
 * Show keyboard scan codes on screen
 * Dump memory
 * Better keyboard driver
-* Make dump regs show 2 registers per line
 * Update README.md for github
 * Add Licence

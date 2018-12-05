@@ -1,12 +1,19 @@
 ; print register values to screen
 
-%macro print_reg 1
+; first arg is register to print
+; second argument is 1 for newline, 0 for spaces
+; default for second arg is 1
+%macro print_reg 1-2 1
 	mov eax, %1
 	mov ebx, .msg%1
 	call kprint
 	call kprint_hexd
-	mov ebx, .msgnl
-	call kprint
+	%if %2 == 1
+		call kprint_nl
+	%else
+		mov ebx, .msgspaces
+		call kprint
+	%endif
 %endmacro
 
 regdump:
@@ -14,23 +21,23 @@ regdump:
 	push ebx
 
 	push ebx
-	print_reg eax
+	print_reg eax, 0
 	pop ebx
 
 	print_reg ebx
-	print_reg ecx
+	print_reg ecx, 0
 	print_reg edx
-	print_reg esp
+	print_reg esp, 0
 	print_reg ebp
-	print_reg esi
+	print_reg esi, 0
 	print_reg edi
 	;print_reg eip
 	;print_reg eflags
-	print_reg cs
+	print_reg cs, 0
 	print_reg ss
-	print_reg ds
+	print_reg ds, 0
 	print_reg es
-	print_reg fs
+	print_reg fs, 0
 	print_reg gs
 
 	pop ebx
@@ -38,7 +45,7 @@ regdump:
 	ret
 	
 	; data
-	.msgnl db  0x0d, 0x0a, 0
+	.msgspaces db "        ", 0
 	.msgeax db "EAX: ", 0
 	.msgebx db "EBX: ", 0
 	.msgecx db "ECX: ", 0
