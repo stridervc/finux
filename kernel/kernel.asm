@@ -52,8 +52,7 @@ mov esp, ebp
 push ebx				; preserve boot information from grub
 mov ebx, MSG_KERNEL
 call kprint
-mov ebx, MSG_NEWLINE
-call kprint
+call kprint_nl
 
 pop ebx					; restore multiboot information
 cmp byte [multiboot], 1
@@ -65,15 +64,13 @@ call multiboot_info
 mov ebx, MSG_IDT
 call kprint
 lidt [idt_reg]
-mov ebx, MSG_NEWLINE
-call kprint
+call kprint_nl
 
 ; initialise PICs
 mov ebx, MSG_PIC
 call kprint
 call init_pic
-mov ebx, MSG_NEWLINE
-call kprint
+call kprint_nl
 
 sti				; Enable interrupts
 
@@ -92,7 +89,6 @@ jmp $			; Infinite loop
 ; data
 ;section .bss
 multiboot	db 0	; 1 = multiboot info available
-MSG_NEWLINE	db 0x0d, 0x0a, 0
 MSG_KERNEL	db "Finux 0.0.2", 0
 MSG_IDT		db "Loading IDT...", 0
 MSG_PIC		db "Initialising PICs...", 0

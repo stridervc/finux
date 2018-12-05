@@ -6,7 +6,6 @@
 SHELLBUFFERSIZE equ 256
 
 MSGSHELLPROMPT db "> ", 0
-MSGSHELLNL db 0x0d, 0x0a, 0
 
 MSGHELLOREPLY db "world", 0x0d, 0x0a, 0
 MSGSHELLUNKNOWN db ": command not found", 0x0d, 0x0a, 0
@@ -33,8 +32,7 @@ shell_input:
 	pusha
 	
 	; print newline
-	mov ebx, MSGSHELLNL
-	call kprint
+	call kprint_nl
 
 	; get keyboard buffer
 	mov ebx, shellinput
