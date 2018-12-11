@@ -2,6 +2,7 @@
 
 %include "../lib/string.asm"
 %include "regdump.asm"
+%include "drivers/pci.asm"
 
 SHELLBUFFERSIZE equ 256
 
@@ -12,6 +13,7 @@ MSGSHELLUNKNOWN db ": command not found", 0x0d, 0x0a, 0
 
 CMDHELLO db "hello", 0
 CMDREGS db "regs", 0
+CMDPCI db "pci", 0
 
 shellinput resb SHELLBUFFERSIZE+1
 
@@ -48,8 +50,7 @@ shell_input:
 	cmp eax, 0
 	je .matched
 
-	; check for some inputs
-	;mov esi, ebx
+	; CMD hello
 	mov edi, CMDHELLO
 	call strcmp
 	cmp eax, 0
@@ -58,6 +59,7 @@ shell_input:
 	jmp .matched
 
 .next1:
+	; CMD regs
 	mov edi, CMDREGS
 	call strcmp
 	cmp eax, 0
@@ -66,6 +68,15 @@ shell_input:
 	jmp .matched
 
 .next2:
+	; CMD pci
+	mov edi, CMDPCI
+	call strcmp
+	cmp eax, 0
+	jne .next3
+	call cmdpci
+	jmp .matched
+
+.next3:
 	call kprint
 	mov ebx, MSGSHELLUNKNOWN
 	call kprint
@@ -84,3 +95,40 @@ cmdhello:
 	pop ebx
 	ret
 
+; loop through bus numbers 0-255 and check for valid (not 0xffff)
+; vendor IDs
+cmdpci:
+	pusha
+	mov ah, 1
+	mov al, 0
+	call pci_check_vendor
+
+	popa
+	;ret
+
+	pusha
+
+	mov cl, 0		; loop counter
+.loop:
+	mov ah, cl		; bus number
+	mov al, 0		; device number
+	call pci_check_vendor
+	cmp eax, 0xffffffff
+	je .checkloop
+	push eax
+	mov eax, 0
+	mov al, cl
+	call kprint_dec	; print bus number
+	pop eax
+	call kprint_hexw	; print vendor id
+	call kprint_nl
+
+.checkloop:
+	cmp cl, 255
+	je .done
+	inc cl
+	jmp .loop
+
+.done:
+	popa
+	ret

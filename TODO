@@ -8,3 +8,6 @@
 * Better keyboard driver
 * Update README.md for github
 * Add Licence
+* Read from filesystem (ls)
+  * IDE
+    * PCI
