@@ -12,3 +12,4 @@
   * IDE
     * PCI
 * Validate ACPI signature and checksum RSDT
+* kprint_dec doesn't print 0 value
