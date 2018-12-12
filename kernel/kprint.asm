@@ -293,6 +293,14 @@ kprint_dec:
 	mov dword [.divisor], 1000000000	; divide by this
 	mov edi, .msgdec					; where to store digit
 
+	; handle zero as a special case
+	cmp eax, 0
+	jne .loop
+	mov [edi], byte '0'
+	inc edi
+	mov [edi], byte 0
+	jmp .continue
+
 .loop:
 	push eax
 	mov edx, 0				; high part of dividend, also remainder after div
