@@ -10,9 +10,6 @@ MSGSHELLPROMPT db "> ", 0
 
 MSGHELLOREPLY db "world", 0x0d, 0x0a, 0
 MSGSHELLUNKNOWN db ": command not found", 0x0d, 0x0a, 0
-MSGSHELLPCISCAN db "Scanning PCI bus...", 0x0d, 0x0a, 0
-MSGSHELLCR db 0x0d, 0
-MSGSHELLSPACE db " ", 0
 
 CMDHELLO db "hello", 0
 CMDREGS db "regs", 0
@@ -76,7 +73,7 @@ shell_input:
 	call strcmp
 	cmp eax, 0
 	jne .next3
-	call cmdpci
+	call pci_scan_all
 	jmp .matched
 
 .next3:
@@ -98,57 +95,3 @@ cmdhello:
 	pop ebx
 	ret
 
-; loop through bus numbers 0-255 and check for valid (not 0xffff)
-; vendor IDs
-cmdpci:
-	pusha
-
-	mov ebx, MSGSHELLPCISCAN
-	call kprint
-
-	mov cl, 0		; bus loop counter
-.loopbus:
-	mov dl, 0		; device loop counter
-
-.loopdevice:
-	; print bus number being scanned
-	mov eax, 0
-	mov al, cl
-	call kprint_dec
-	mov ebx, MSGSHELLSPACE
-	call kprint
-	; print device number being scanned
-	mov al, dl
-	call kprint_dec
-	mov ebx, MSGSHELLCR
-	call kprint
-
-	mov ah, cl		; bus number
-	mov al, dl		; device number
-	call pci_check_vendor
-	cmp ax, 0xffff
-	je .checkloop
-	;push eax
-	;mov eax, 0
-	;mov al, cl
-	;call kprint_dec	; print bus number
-	;pop eax
-	call kprint_hexw	; print vendor id
-	call kprint_nl
-
-.checkloop:
-	cmp dl, 31
-	je .donedevice
-	inc dl
-	jmp .loopdevice
-
-.donedevice:
-	cmp cl, 255
-	je .done
-	inc cl
-	jmp .loopbus
-
-.done:
-	call kprint_nl
-	popa
-	ret

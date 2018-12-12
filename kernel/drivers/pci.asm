@@ -46,16 +46,82 @@ pci_read:
 
 	ret
 
-; Check pci vendor
-; AH bus number
-; AL device number
-; return vendor id in eax (ax effectively, vendor is 16 bits)
-pci_check_vendor:
-	push ebx
+; Scan all devices on bus and check for valid ones
+; AH bus number to scan
+pci_scan_bus:
+	pusha
 	
-	mov bx, 0
+	mov al, 0	; device number
+	mov bx, 0	; function and register numbers
+
+.loop:
+	call .print_bus_device
+
+	push eax
 	call pci_read
 
-	pop ebx
+	cmp ax, 0xffff
+	je .checkloop
+
+	call kprint_hexw	; print AX (vendor id)
+	call kprint_nl
+
+.checkloop:
+	pop eax
+	inc al
+	cmp al, 32
+	jne .loop
+
+.done:
+	popa
 	ret
 
+; helper function to print bus and device number
+; ah = bus
+; al = device
+.print_bus_device:
+	push eax
+	push ebx
+	
+	mov ebx, .msgcr
+	call kprint			; move cursor to beginning of line
+
+	and eax, 0x0000ffff
+	push ax
+	shr ax, 8	; bus number in al
+	call kprint_dec
+	pop ax
+	mov ah, 0	; device number in al
+	mov ebx, .msgspace
+	call kprint
+	call kprint_dec
+	call kprint
+
+	pop ebx
+	pop eax
+	ret
+
+.msgspace db " ", 0
+.msgcr db 0x0d, 0
+
+; scan all pci busses and devices
+pci_scan_all:
+	pusha
+
+	mov ebx, .msgscanning
+	call kprint
+	call kprint_nl
+
+	mov ah, 0	; bus number
+
+.loop:
+	call pci_scan_bus
+	inc ah
+	cmp ah, 0
+	jne .loop
+
+	call kprint_nl
+	popa
+	ret
+
+.msgscanning db "Scanning for PCI devices...", 0
