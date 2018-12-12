@@ -32,6 +32,9 @@ multiboot_info:
 	cmp eax, 4
 	je .meminfo
 
+	cmp eax, 14
+	je .acpi1
+
 	; unhandled type
 	;call kprint_dec
 	;call kprint_nl
@@ -114,6 +117,48 @@ multiboot_info:
 	pop ecx
 	jmp .resume
 
+.acpi1:
+	pusha
+
+	push ebx
+	mov ebx, .msgacpi
+	call kprint
+	pop ebx
+
+	; OEM ID
+	add ebx, 8+8+1
+	; copy vendor chars to null terminated string
+	mov esi, ebx
+	mov edi, .msgacpivendor
+	mov ecx, 6
+	rep movsb
+
+	; print vendor
+	push ebx
+	mov ebx, .msgacpivendor
+	call kprint
+	pop ebx
+
+	; Revision
+	add ebx, 6
+	mov al, byte [ebx]
+	cmp al, 0
+	jne .continue
+	push ebx
+	mov ebx, .msgacpi1
+	call kprint
+	pop ebx
+
+	; rsdt address
+	add ebx, 1
+	mov ebx, [ebx]
+	; TODO parse rsdt
+
+.continue:
+	call kprint_nl
+	popa
+	jmp .resume
+
 .ret:
 	popa
 	ret
@@ -124,3 +169,7 @@ multiboot_info:
 	.msgupperpost db "M", 0
 	.msgbootloader db "Bootloader was: ", 0
 	.msgcommandline db "Command line: ", 0
+	.msgacpi db "ACPI Vendor: ", 0
+	.msgacpivendor db "      ", 0
+	.msgacpi1 db " Version 1.0", 0
+

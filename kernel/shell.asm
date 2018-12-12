@@ -10,6 +10,8 @@ MSGSHELLPROMPT db "> ", 0
 
 MSGHELLOREPLY db "world", 0x0d, 0x0a, 0
 MSGSHELLUNKNOWN db ": command not found", 0x0d, 0x0a, 0
+MSGSHELLPCISCAN db "Scanning PCI bus...", 0x0d, 0x0a, 0
+MSGSHELLCR db 0x0d, 0
 
 CMDHELLO db "hello", 0
 CMDREGS db "regs", 0
@@ -99,27 +101,29 @@ cmdhello:
 ; vendor IDs
 cmdpci:
 	pusha
-	mov ah, 1
-	mov al, 0
-	call pci_check_vendor
 
-	popa
-	;ret
-
-	pusha
+	mov ebx, MSGSHELLPCISCAN
+	call kprint
 
 	mov cl, 0		; loop counter
 .loop:
+	; print bus number being scanned
+	mov eax, 0
+	mov al, cl
+	call kprint_dec
+	mov ebx, MSGSHELLCR
+	call kprint
+
 	mov ah, cl		; bus number
 	mov al, 0		; device number
 	call pci_check_vendor
-	cmp eax, 0xffffffff
+	cmp ax, 0xffff
 	je .checkloop
-	push eax
-	mov eax, 0
-	mov al, cl
-	call kprint_dec	; print bus number
-	pop eax
+	;push eax
+	;mov eax, 0
+	;mov al, cl
+	;call kprint_dec	; print bus number
+	;pop eax
 	call kprint_hexw	; print vendor id
 	call kprint_nl
 
@@ -130,5 +134,6 @@ cmdpci:
 	jmp .loop
 
 .done:
+	call kprint_nl
 	popa
 	ret

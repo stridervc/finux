@@ -11,3 +11,4 @@
 * Read from filesystem (ls)
   * IDE
     * PCI
+* Validate ACPI signature and checksum RSDT

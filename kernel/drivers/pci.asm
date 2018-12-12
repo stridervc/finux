@@ -49,13 +49,13 @@ pci_read:
 ; Check pci vendor
 ; AH bus number
 ; AL device number
-; return vendor number in eax (ax effectively, vendor is 16bit)
+; return vendor id in eax (ax effectively, vendor is 16 bits)
 pci_check_vendor:
-	push bx
+	push ebx
 	
 	mov bx, 0
 	call pci_read
 
-	pop bx
+	pop ebx
 	ret
 
