@@ -39,10 +39,14 @@ pci_read:
 	; enable bit 31
 	or eax, 0x80000000
 
-	out CONFIG_ADDRESS, eax
+	mov dx, CONFIG_ADDRESS
+	out dx, eax
 
 	popa
-	in eax, CONFIG_DATA
+	push edx
+	mov dx, CONFIG_DATA
+	in eax, dx
+	pop edx
 
 	ret
 
