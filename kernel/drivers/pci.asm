@@ -4,6 +4,8 @@
 CONFIG_ADDRESS	equ 0xCF8
 CONFIG_DATA		equ 0xCFC
 
+%include "drivers/ide.asm"
+
 ; AH bus number 		8 bits
 ; AL device number		5 bits
 ; BH function number	3 bits
@@ -174,9 +176,14 @@ pci_probe_device:
 	call pci_init_bridge_device
 	jmp .done
 
-	; TODO handle class 1, mass storage device
-
 .next1:
+	; handle class 1, mass storage device
+	cmp dl, 1
+	jne .next2
+	call pci_init_mass_storage
+	jmp .done
+
+.next2:
 	mov ebx, msgunsupported
 	call kprint
 	call kprint_nl
@@ -286,6 +293,38 @@ pci_init_bridge_01:
 	popa
 	ret
 
+; Initialise mass storage device
+; AH = bus number
+; AL = device number
+; BH = function number
+pci_init_mass_storage:
+	pusha
+	
+	push ebx
+	mov ebx, msgstorage
+	call kprint
+	call kprint_nl
+	pop ebx
+
+	; get subclass
+	mov bl, 2			; register 2
+	push eax
+	call pci_read
+	mov edx, eax		; store result
+	pop eax
+
+	shr edx, 16			; subclass into DL
+	cmp dl, 1			; IDE controller?
+	jne .notide
+	call pci_init_ide
+	jmp .done
+
+.notide:
+
+.done:
+	popa
+	ret
+
 ; Check if a device is multifunction
 ; AH = bus number
 ; AL = device number
@@ -337,3 +376,5 @@ msgunsupported	db "  * Unsupported at this time", 0
 msgbridge		db "  * Bridge device", 0
 msghostbridge	db "  * Host bridge", 0
 msgisabridge	db "  * ISA bridge", 0
+msgstorage		db "  * Mass Storage", 0
+
