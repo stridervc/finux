@@ -24,7 +24,9 @@ shell_main:
 	mov ebx, MSGSHELLPROMPT
 	call kprint
 
-	jmp $
+.loop:
+	hlt
+	jmp .loop
 
 	popa
 	ret
