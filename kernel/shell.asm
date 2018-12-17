@@ -2,7 +2,7 @@
 
 %include "../lib/string.asm"
 %include "regdump.asm"
-%include "drivers/pci.asm"
+;%include "drivers/pci.asm"
 
 SHELLBUFFERSIZE equ 256
 

@@ -74,6 +74,9 @@ call kprint_nl
 
 sti				; Enable interrupts
 
+; scan for pci devices
+call pci_scan_all
+
 call shell_main
 
 jmp $			; Infinite loop
@@ -85,6 +88,7 @@ jmp $			; Infinite loop
 %include "pic.asm"
 %include "shell.asm"
 %include "multibootinfo.asm"
+%include "drivers/pci.asm"
 
 ; data
 ;section .bss

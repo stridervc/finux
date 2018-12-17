@@ -59,16 +59,18 @@ pci_scan_bus:
 	mov bx, 0	; function and register numbers
 
 .loop:
-	call .print_bus_device
-
 	push eax
 	call pci_read
 
 	cmp ax, 0xffff
 	je .checkloop
 
-	call kprint_hexw	; print AX (vendor id)
-	call kprint_nl
+	; call a function here to delve into this device
+	; first thing to do is check if it's a multifunction device
+	; if it is, scan it's other functions as well
+	pop eax
+	push eax
+	call pci_probe_device
 
 .checkloop:
 	pop eax
@@ -80,39 +82,177 @@ pci_scan_bus:
 	popa
 	ret
 
-; helper function to print bus and device number
-; ah = bus
-; al = device
-.print_bus_device:
+; Probe a PCI device in detail
+; AH = bus number
+; AL = device number
+pci_probe_device:
+	pusha
+
+	; different approach:
+	; just get class here and pass control to a handler
+	; for that class
+
+	; print bus:device
+	mov ebx, msgpci
+	call kprint
+
 	push eax
-	push ebx
-	
-	mov ebx, .msgcr
-	call kprint			; move cursor to beginning of line
-
-	and eax, 0x0000ffff
-	push ax
-	shr ax, 8	; bus number in al
+	shr ax, 8			; bus number in al
+	and eax, 0x000000ff	; throw away everything else
 	call kprint_dec
-	pop ax
-	mov ah, 0	; device number in al
-	mov ebx, .msgspace
-	call kprint
-	call kprint_dec
-	call kprint
-
-	pop ebx
 	pop eax
+	mov ebx, msgcolon
+	call kprint
+	push eax
+	and eax, 0x000000ff	; throw away everything except device number
+	call kprint_dec
+	pop eax
+	mov ebx, msgspace
+	call kprint
+
+	; get device class
+	push eax
+	mov bx, 0x0002		; function 0, register 2
+	call pci_read
+	shr eax, 24			; class code in AL
+	mov ebx, msgclass
+	call kprint
+	call kprint_hexb
+	mov edx, eax		; class code in DL
+	pop eax
+	call kprint_nl
+
+	; pass to handler for this device class
+	cmp dl, 6
+	jne .next1
+	call pci_init_bridge_device
+	jmp .done
+
+.next1:
+	mov ebx, msgunsupported
+	call kprint
+	call kprint_nl
+
+.done:
+	popa
 	ret
 
-.msgspace db " ", 0
-.msgcr db 0x0d, 0
+; Initialise bridge device
+; AH = bus number
+; AL = device number
+pci_init_bridge_device:
+	pusha
+
+	mov ebx, msgbridge
+	call kprint
+	call kprint_nl
+
+	; get subclass
+	push eax
+	mov bx, 0x0002		; function 0, register 2
+	call pci_read
+	shr eax, 16			; subclass in AL
+	mov edx, eax		; subclass in DL
+	pop eax
+
+	cmp dl, 0
+	jne .next1
+	call pci_init_bridge_00
+	jmp .done
+
+.next1:
+	cmp dl, 1
+	jne .next2
+	call pci_init_bridge_01
+	jmp .done
+
+.next2:
+
+.done:
+	popa
+	ret
+
+; Initialise host bridge
+; AH = bus number
+; AL = device number
+pci_init_bridge_00:
+	pusha
+
+	mov ebx, msghostbridge
+	call kprint
+	call kprint_nl
+
+	; check if it's multifunction
+	push eax
+	call pci_is_mf
+	cmp al, 1
+	jne .notmf
+	
+	mov ebx, msgmf
+	call kprint
+	call kprint_nl
+
+.notmf:
+	pop eax
+
+	popa
+	ret
+
+; Initialise ISA bridge
+; AH = bus number
+; AL = device number
+pci_init_bridge_01:
+	pusha
+
+	mov ebx, msgisabridge
+	call kprint
+	call kprint_nl
+
+	; check if it's multifunction
+	push eax
+	call pci_is_mf
+	cmp al, 1
+	jne .notmf
+	
+	mov ebx, msgmf
+	call kprint
+	call kprint_nl
+	; TODO check other functions on this multifunction device
+
+.notmf:
+	pop eax
+
+	popa
+	ret
+
+; Check if a device is multifunction
+; AH = bus number
+; AL = device number
+; return EAX = 1 if MF, 0 otherwise
+pci_is_mf:
+	push ebx
+
+	mov bx, 0x0003		; function 0, register 3
+	call pci_read
+	shr eax, 16			; header type in AL
+	and al, 10000000b	; keep only MF bit
+	cmp al, 10000000b
+	je .mf
+	mov eax, 0
+	jmp .done
+
+.mf:
+	mov eax, 1
+
+.done:
+	pop ebx
+	ret
 
 ; scan all pci busses and devices
 pci_scan_all:
 	pusha
 
-	mov ebx, .msgscanning
+	mov ebx, msgscanning
 	call kprint
 	call kprint_nl
 
@@ -124,8 +264,16 @@ pci_scan_all:
 	cmp ah, 0
 	jne .loop
 
-	call kprint_nl
 	popa
 	ret
 
-.msgscanning db "Scanning for PCI devices...", 0
+msgscanning		db "Scanning for PCI devices...", 0
+msgpci			db "PCI ", 0
+msgcolon		db ":", 0
+msgspace		db " ", 0
+msgclass		db "Class: ", 0
+msgunsupported	db "  * Unsupported at this time", 0
+msgbridge		db "  * Bridge device", 0
+msghostbridge	db "  * Host bridge", 0
+msgisabridge	db "  * ISA bridge", 0
+msgmf			db "  * Multifunction device", 0
