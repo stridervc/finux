@@ -51,6 +51,7 @@ pci_read:
 	ret
 
 ; Scan all devices on bus and check for valid ones
+; Probe devices found
 ; AH bus number to scan
 pci_scan_bus:
 	pusha
@@ -82,42 +83,89 @@ pci_scan_bus:
 	popa
 	ret
 
-; Probe a PCI device in detail
+; Scan a PCI multifunction device (functions 0-7)
+; Don't scan function 0, since this has been taken care of
+; by the caller
 ; AH = bus number
 ; AL = device number
-pci_probe_device:
+; BH = start function
+pci_scan_mf:
 	pusha
 
-	; different approach:
-	; just get class here and pass control to a handler
-	; for that class
+.loop:
+	cmp bh, 7
+	ja .done
 
-	; print bus:device
+	; TODO get this pci_probe_device working
+	;call pci_probe_device
+	call pci_print_id
+	call kprint_nl
+
+	inc bh
+	jmp .loop
+
+.done:
+	popa
+	ret
+
+; Print "PCI 0:1:2 " (bus:device:function)
+; AH = bus number
+; AL = device number
+; BH = function number
+pci_print_id:
+	push eax
+	push ebx
+	push edx
+
+	mov edx, ebx		; store function number (BH)
 	mov ebx, msgpci
 	call kprint
 
 	push eax
 	shr ax, 8			; bus number in al
 	and eax, 0x000000ff	; throw away everything else
-	call kprint_dec
+	call kprint_dec		; print bus number
 	pop eax
+
 	mov ebx, msgcolon
-	call kprint
+	call kprint			; print colon
+
 	push eax
 	and eax, 0x000000ff	; throw away everything except device number
+	call kprint_dec		; print device number
+	call kprint			; print colon
+	mov eax, 0
+	mov al, dh			; function number
 	call kprint_dec
 	pop eax
+
 	mov ebx, msgspace
 	call kprint
 
+	pop edx
+	pop ebx
+	pop eax
+	ret
+
+; Probe a PCI device in detail
+; AH = bus number
+; AL = device number
+; BH = function number
+pci_probe_device:
+	pusha
+
+	call pci_print_id
+
 	; get device class
 	push eax
-	mov bx, 0x0002		; function 0, register 2
+	mov bl, 2			; register 2
 	call pci_read
 	shr eax, 24			; class code in AL
+	push ebx
 	mov ebx, msgclass
 	call kprint
 	call kprint_hexb
+	pop ebx
 	mov edx, eax		; class code in DL
 	pop eax
 	call kprint_nl
@@ -140,6 +188,7 @@ pci_probe_device:
 ; Initialise bridge device
 ; AH = bus number
 ; AL = device number
+; BH = function number
 pci_init_bridge_device:
 	pusha
 
@@ -175,6 +224,7 @@ pci_init_bridge_device:
 ; Initialise host bridge
 ; AH = bus number
 ; AL = device number
+; BH = function number
 pci_init_bridge_00:
 	pusha
 
@@ -201,12 +251,19 @@ pci_init_bridge_00:
 ; Initialise ISA bridge
 ; AH = bus number
 ; AL = device number
+; BH = function number
 pci_init_bridge_01:
 	pusha
 
+	push ebx
 	mov ebx, msgisabridge
 	call kprint
 	call kprint_nl
+	pop ebx
+
+	; if this is not function 0, skip multifunction check
+	cmp bh, 0
+	jne .done
 
 	; check if it's multifunction
 	push eax
@@ -214,14 +271,24 @@ pci_init_bridge_01:
 	cmp al, 1
 	jne .notmf
 	
+	push ebx
 	mov ebx, msgmf
 	call kprint
 	call kprint_nl
-	; TODO check other functions on this multifunction device
+	pop ebx
+
+	; check other functions on this multifunction device
+	pop eax
+	push ebx
+	mov bh, 1			; start at function 1
+	call pci_scan_mf
+	pop ebx
+	jmp .done
 
 .notmf:
 	pop eax
 
+.done:
 	popa
 	ret
 
