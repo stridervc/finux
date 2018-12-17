@@ -60,21 +60,8 @@ pci_scan_bus:
 	mov bx, 0	; function and register numbers
 
 .loop:
-	push eax
-	call pci_read
-
-	cmp ax, 0xffff
-	je .checkloop
-
-	; call a function here to delve into this device
-	; first thing to do is check if it's a multifunction device
-	; if it is, scan it's other functions as well
-	pop eax
-	push eax
 	call pci_probe_device
 
-.checkloop:
-	pop eax
 	inc al
 	cmp al, 32
 	jne .loop
@@ -84,8 +71,6 @@ pci_scan_bus:
 	ret
 
 ; Scan a PCI multifunction device (functions 0-7)
-; Don't scan function 0, since this has been taken care of
-; by the caller
 ; AH = bus number
 ; AL = device number
 ; BH = start function
@@ -96,10 +81,7 @@ pci_scan_mf:
 	cmp bh, 7
 	ja .done
 
-	; TODO get this pci_probe_device working
-	;call pci_probe_device
-	call pci_print_id
-	call kprint_nl
+	call pci_probe_device
 
 	inc bh
 	jmp .loop
@@ -154,6 +136,19 @@ pci_print_id:
 pci_probe_device:
 	pusha
 
+	; first, check if this is an actual device
+	push eax
+
+	mov bl, 0			; register 0
+	call pci_read
+	cmp ax, 0xffff		; check vendor id
+	jne .continue
+	pop eax
+	jmp .done			; not a device
+
+.continue:
+	pop eax
+
 	call pci_print_id
 
 	; get device class
@@ -170,11 +165,16 @@ pci_probe_device:
 	pop eax
 	call kprint_nl
 
+	cmp dl, 0xff		; skip if it's not an actual device
+	je .done
+
 	; pass to handler for this device class
 	cmp dl, 6
 	jne .next1
 	call pci_init_bridge_device
 	jmp .done
+
+	; TODO handle class 1, mass storage device
 
 .next1:
 	mov ebx, msgunsupported
@@ -192,13 +192,15 @@ pci_probe_device:
 pci_init_bridge_device:
 	pusha
 
+	push ebx
 	mov ebx, msgbridge
 	call kprint
 	call kprint_nl
+	pop ebx
 
 	; get subclass
 	push eax
-	mov bx, 0x0002		; function 0, register 2
+	mov bl, 2			; register 2
 	call pci_read
 	shr eax, 16			; subclass in AL
 	mov edx, eax		; subclass in DL
@@ -238,9 +240,7 @@ pci_init_bridge_00:
 	cmp al, 1
 	jne .notmf
 	
-	mov ebx, msgmf
-	call kprint
-	call kprint_nl
+	; TODO scan multifunction device
 
 .notmf:
 	pop eax
@@ -271,12 +271,6 @@ pci_init_bridge_01:
 	cmp al, 1
 	jne .notmf
 	
-	push ebx
-	mov ebx, msgmf
-	call kprint
-	call kprint_nl
-	pop ebx
-
 	; check other functions on this multifunction device
 	pop eax
 	push ebx
@@ -343,4 +337,3 @@ msgunsupported	db "  * Unsupported at this time", 0
 msgbridge		db "  * Bridge device", 0
 msghostbridge	db "  * Host bridge", 0
 msgisabridge	db "  * ISA bridge", 0
-msgmf			db "  * Multifunction device", 0
