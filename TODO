@@ -13,3 +13,5 @@
     * PCI
 * Validate ACPI signature and checksum RSDT
 * kprint_dec doesn't print 0 value
+* Output boot messages to serial
+* Use serial output to write automated tests
