@@ -7,11 +7,9 @@
 * Dump memory
 * Better keyboard driver
 * Update README.md for github
-* Add Licence
 * Read from filesystem (ls)
   * IDE
     * PCI
 * Validate ACPI signature and checksum RSDT
-* kprint_dec doesn't print 0 value
 * Output boot messages to serial
 * Use serial output to write automated tests
