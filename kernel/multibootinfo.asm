@@ -32,6 +32,9 @@ multiboot_info:
 	cmp eax, 4
 	je .meminfo
 
+	cmp eax, 5
+	je .bootdevice
+
 	cmp eax, 14
 	je .acpi1
 
@@ -117,6 +120,45 @@ multiboot_info:
 	pop ecx
 	jmp .resume
 
+.bootdevice:
+	push eax
+	push ebx
+
+	; print message
+	push ebx
+	mov ebx, .msgbootdevice
+	call kprint
+	pop ebx
+
+	add ebx, 8		; point to biosdev
+	mov eax, dword [ebx]
+	call kprint_hexb
+	mov [grub_boot_device], eax
+	push ebx
+	mov ebx, .msgcomma
+	call kprint
+	pop ebx
+
+	add ebx, 4		; point to partition
+	mov eax, dword [ebx]
+	call kprint_hexb
+	mov [grub_boot_partition], eax
+	push ebx
+	mov ebx, .msgcomma
+	call kprint
+	pop ebx
+
+	add ebx, 4		; point to subpartition
+	mov eax, dword [ebx]
+	call kprint_hexb
+	mov [grub_boot_subpartition], eax
+
+	call kprint_nl
+
+	pop ebx
+	pop eax
+	jmp .resume
+
 .acpi1:
 	pusha
 
@@ -171,5 +213,11 @@ multiboot_info:
 	.msgcommandline db "Command line: ", 0
 	.msgacpi db "ACPI Vendor: ", 0
 	.msgacpivendor db "      ", 0
+	.msgbootdevice db "Boot device: ", 0
 	.msgacpi1 db " Version 1.0", 0
+	.msgcomma db ",", 0
 
+; data
+grub_boot_device dw 0
+grub_boot_partition dw 0
+grub_boot_subpartition dw 0
