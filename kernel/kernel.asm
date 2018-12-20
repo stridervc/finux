@@ -74,6 +74,28 @@ call kprint_nl
 
 sti				; Enable interrupts
 
+; test ata identify
+mov ebx, MSG_ID_DISK
+call kprint
+call kprint_nl
+mov dx, PRIMARY_ATA_START
+mov al, 0xa0	; master disk
+mov edi, tmp_drive_id
+test_ata:
+call ata_identify
+cmp al, 0
+je .drive_success
+
+; error, print al
+call kprint_hexb
+jmp .shell
+
+.drive_success:
+mov ebx, tmp_drive_id
+call kprint
+call kprint_nl
+
+.shell:
 call shell_main
 
 jmp $			; Infinite loop
@@ -85,6 +107,7 @@ jmp $			; Infinite loop
 %include "pic.asm"
 %include "shell.asm"
 %include "multibootinfo.asm"
+%include "drivers/ata.asm"
 
 ; data
 ;section .bss
@@ -92,5 +115,6 @@ multiboot	db 0	; 1 = multiboot info available
 MSG_KERNEL	db "Finux 0.0.2", 0
 MSG_IDT		db "Loading IDT...", 0
 MSG_PIC		db "Initialising PICs...", 0
-MSG_PROMPT	db "> ", 0
+MSG_ID_DISK db "Calling ATA Identify on Primary Master...", 0
+tmp_drive_id	resw 256
 
