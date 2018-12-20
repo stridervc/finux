@@ -22,7 +22,6 @@ ATA_CMD_IDENTIFY	equ 0xEC
 ;  AL = 2 error reading from disk
 ;  ID in [ES:EDI]
 ata_identify:
-	push ebx		; only used for debug printing
 	push ecx
 	push edx
 	push edi
@@ -51,9 +50,6 @@ ata_identify:
 
 	; wait for BSY bit to clear
 	; BSY is set while drive is preparing to send/receive data
-	mov ebx, msgbsyloop
-	call kprint
-	call kprint_nl
 .bsy_loop:
 	and al, 10000000b
 	cmp al, 0
@@ -62,9 +58,6 @@ ata_identify:
 	jmp .bsy_loop
 
 .bsy_done:
-	mov ebx, msgdrqloop
-	call kprint
-	call kprint_nl
 
 .drq_loop:
 	; wait for bit 3 (DRQ) to be set, or bit 0 (ERR) to be set
@@ -80,9 +73,6 @@ ata_identify:
 	jmp .drq_loop
 
 .drive_ready:
-	mov ebx, msgread
-	call kprint
-	call kprint_nl
 	pop ax			; pushed in loop
 	; read data from drive to [ES:DI]
 	mov cx, 256		; read 256 * 16 bits of data
@@ -111,10 +101,5 @@ ata_identify:
 	pop edi
 	pop edx
 	pop ecx
-	pop ebx
 	ret
-
-msgbsyloop db "Busy loop wait", 0
-msgdrqloop db "DRQ loop wait", 0
-msgread    db "Reading data", 0
 

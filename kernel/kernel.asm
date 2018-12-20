@@ -75,13 +75,13 @@ call kprint_nl
 sti				; Enable interrupts
 
 ; test ata identify
+test_ata:
 mov ebx, MSG_ID_DISK
 call kprint
 call kprint_nl
 mov dx, PRIMARY_ATA_START
 mov al, 0xa0	; master disk
 mov edi, tmp_drive_id
-test_ata:
 call ata_identify
 cmp al, 0
 je .drive_success
@@ -91,7 +91,7 @@ call kprint_hexb
 jmp .shell
 
 .drive_success:
-mov ebx, tmp_drive_id
+mov ebx, MSG_DISK_FOUND
 call kprint
 call kprint_nl
 
@@ -116,5 +116,6 @@ MSG_KERNEL	db "Finux 0.0.2", 0
 MSG_IDT		db "Loading IDT...", 0
 MSG_PIC		db "Initialising PICs...", 0
 MSG_ID_DISK db "Calling ATA Identify on Primary Master...", 0
+MSG_DISK_FOUND db "Disk found", 0
 tmp_drive_id	resw 256
 
