@@ -218,6 +218,6 @@ multiboot_info:
 	.msgcomma db ",", 0
 
 ; data
-grub_boot_device dw 0
-grub_boot_partition dw 0
-grub_boot_subpartition dw 0
+grub_boot_device dd 0
+grub_boot_partition dd 0
+grub_boot_subpartition dd 0
