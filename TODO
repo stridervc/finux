@@ -6,10 +6,10 @@
 * Show keyboard scan codes on screen
 * Dump memory
 * Better keyboard driver
-* Update README.md for github
 * Read from filesystem (ls)
   * IDE
     * PCI
 * Validate ACPI signature and checksum RSDT
 * Output boot messages to serial
 * Use serial output to write automated tests
+* Load initial ramdisk
