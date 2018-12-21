@@ -24,13 +24,18 @@ common_interrupt_handler:
 	mov eax, [esp+4]
 	push eax		; push interrupt number onto stack again
 
-	cmp eax, 0x21	; Keyboard interrupt?
-	je .keyboard
+	cmp eax, 0x20
+	jne .cont1
+	call timer_interrupt
 	jmp .done
 
-.keyboard:
+.cont1:
+	cmp eax, 0x21	; Keyboard interrupt?
+	jne .cont2
 	call keyboard_int
-	;jmp .done
+	jmp .done
+
+.cont2:
 
 .done:
 	pop eax			; get interrupt number from stack

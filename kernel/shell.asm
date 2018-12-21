@@ -10,10 +10,12 @@ MSGSHELLPROMPT db "> ", 0
 
 MSGHELLOREPLY db "world", 0x0d, 0x0a, 0
 MSGSHELLUNKNOWN db ": command not found", 0x0d, 0x0a, 0
+MSGUPTIME		db " seconds uptime", 0
 
-CMDHELLO db "hello", 0
-CMDREGS db "regs", 0
-CMDPCI db "pci", 0
+CMDHELLO 	db "hello", 0
+CMDREGS 	db "regs", 0
+CMDPCI 		db "pci", 0
+CMDUPTIME	db "uptime", 0
 
 shellinput resb SHELLBUFFERSIZE+1
 
@@ -79,6 +81,19 @@ shell_input:
 	jmp .matched
 
 .next3:
+	; CMD uptime
+	mov edi, CMDUPTIME
+	call strcmp
+	cmp eax, 0
+	jne .next4
+	mov eax, [UPTIME]
+	call kprint_dec
+	mov ebx, MSGUPTIME
+	call kprint
+	call kprint_nl
+	jmp .matched
+
+.next4:
 	call kprint
 	mov ebx, MSGSHELLUNKNOWN
 	call kprint

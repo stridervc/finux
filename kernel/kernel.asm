@@ -72,6 +72,12 @@ call kprint
 call init_pic
 call kprint_nl
 
+; initialise timer
+mov ebx, MSG_INIT_TIMER
+call kprint
+call init_timer
+call kprint_nl
+
 sti				; Enable interrupts
 
 ; test ata identify
@@ -108,6 +114,7 @@ jmp $			; Infinite loop
 %include "shell.asm"
 %include "multibootinfo.asm"
 %include "drivers/ata.asm"
+%include "timer.asm"
 
 ; data
 ;section .bss
@@ -117,5 +124,6 @@ MSG_IDT		db "Loading IDT...", 0
 MSG_PIC		db "Initialising PICs...", 0
 MSG_ID_DISK db "Calling ATA Identify on Primary Master...", 0
 MSG_DISK_FOUND db "Disk found", 0
+MSG_INIT_TIMER	db "Initialising timer...", 0
 tmp_drive_id	resw 256
 
