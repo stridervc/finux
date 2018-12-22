@@ -13,3 +13,4 @@
 * Output boot messages to serial
 * Use serial output to write automated tests
 * Implement a virtual file system (test by mounting initrd)
+* Get some memory allocation working
