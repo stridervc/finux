@@ -12,4 +12,3 @@
 * Validate ACPI signature and checksum RSDT
 * Output boot messages to serial
 * Use serial output to write automated tests
-* Load initial ramdisk
