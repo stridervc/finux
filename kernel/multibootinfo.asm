@@ -29,6 +29,9 @@ multiboot_info:
 	cmp eax, 2
 	je .bootloader
 
+	cmp eax, 3
+	je .module
+
 	cmp eax, 4
 	je .meminfo
 
@@ -83,6 +86,33 @@ multiboot_info:
 	call kprint_nl
 
 	pop ebx
+	jmp .resume
+
+.module:
+	push eax
+	push ebx
+
+	push ebx
+	mov ebx, .msgmodule
+	call kprint
+	pop ebx
+
+	add ebx, 8		; start addr
+	mov eax, dword [ebx]
+	call kprint_hexd
+
+	push ebx
+	mov ebx, .msgmodule2
+	call kprint
+	pop ebx
+
+	add ebx, 4		; end addr
+	mov eax, dword [ebx]
+	call kprint_hexd
+	call kprint_nl
+
+	pop ebx
+	pop eax
 	jmp .resume
 
 .meminfo:
@@ -216,6 +246,8 @@ multiboot_info:
 	.msgbootdevice db "Boot device: ", 0
 	.msgacpi1 db " Version 1.0", 0
 	.msgcomma db ",", 0
+	.msgmodule db "Kernel module start at ", 0
+	.msgmodule2 db ", end at ", 0
 
 ; data
 grub_boot_device dd 0

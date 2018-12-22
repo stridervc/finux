@@ -17,6 +17,7 @@ clean:
 	rm -f bootsector/*.o bootsector/*.bin
 	rm -f kernel/*.o kernel/*.bin kernel/*.elf
 	rm -f disk.img grubdisk.img
+	rm -rf finux.initrd
 
 run: disk.img
 	qemu-system-i386 -drive format=raw,index=0,file=$<
@@ -37,7 +38,7 @@ grubdisk.img:
 	cp $(DISKTMP) $@
 	rm -rf $(GRUBTMP)
 
-disk.img: grubdisk.img grub.cfg finux.bin
+disk.img: grubdisk.img grub.cfg finux.bin finux.initrd
 	$(eval LODEVICE := $(shell sudo losetup -f))
 	cp -f $< $@
 	mkdir mnt
@@ -45,6 +46,7 @@ disk.img: grubdisk.img grub.cfg finux.bin
 	sudo mount $(LODEVICE) mnt
 	sudo cp grub.cfg mnt/boot/grub/
 	sudo cp finux.bin mnt/boot/
+	sudo cp finux.initrd mnt/boot/
 	sudo umount mnt
 	rmdir mnt
 	sudo losetup -d $(LODEVICE)
@@ -60,3 +62,7 @@ debug: disk.img
 	qemu-system-i386 -S -s \
 			-drive format=raw,index=0,file=$< &	
 	$(GDB)
+
+finux.initrd: initrd/*
+	tar cf $@ $<
+
