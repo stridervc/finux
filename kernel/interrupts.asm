@@ -1,6 +1,7 @@
 ; Interrupt handlers
 
 %include "drivers/keyboard.asm"
+%include "exception.asm"
 
 %macro no_error_code_interrupt_handler 1
 global interrupt_handler_%1
@@ -24,18 +25,24 @@ common_interrupt_handler:
 	mov eax, [esp+4]
 	push eax		; push interrupt number onto stack again
 
+	cmp eax, 31		; exceptions
+	jae .cont1
+	call exception_int
+	jmp .done
+
+.cont1
 	cmp eax, 0x20
-	jne .cont1
+	jne .cont2
 	call timer_interrupt
 	jmp .done
 
-.cont1:
+.cont2:
 	cmp eax, 0x21	; Keyboard interrupt?
-	jne .cont2
+	jne .cont3
 	call keyboard_int
 	jmp .done
 
-.cont2:
+.cont3:
 
 .done:
 	pop eax			; get interrupt number from stack
