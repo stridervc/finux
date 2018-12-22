@@ -64,5 +64,5 @@ debug: disk.img
 	$(GDB)
 
 finux.initrd: initrd/*
-	tar cf $@ $<
+	tar -C initrd -cf $@ .
 

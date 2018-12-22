@@ -92,6 +92,8 @@ multiboot_info:
 	push eax
 	push ebx
 
+	mov [grub_module_present], byte 1
+
 	push ebx
 	mov ebx, .msgmodule
 	call kprint
@@ -100,6 +102,7 @@ multiboot_info:
 	add ebx, 8		; start addr
 	mov eax, dword [ebx]
 	call kprint_hexd
+	mov [grub_module_start], dword eax
 
 	push ebx
 	mov ebx, .msgmodule2
@@ -110,6 +113,7 @@ multiboot_info:
 	mov eax, dword [ebx]
 	call kprint_hexd
 	call kprint_nl
+	mov [grub_module_end], dword eax
 
 	pop ebx
 	pop eax
@@ -253,3 +257,8 @@ multiboot_info:
 grub_boot_device dd 0
 grub_boot_partition dd 0
 grub_boot_subpartition dd 0
+
+grub_module_present	db 0
+grub_module_start	dd 0
+grub_module_end		dd 0
+

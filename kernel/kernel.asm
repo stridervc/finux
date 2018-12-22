@@ -101,6 +101,8 @@ mov ebx, MSG_DISK_FOUND
 call kprint
 call kprint_nl
 
+call process_initrd
+
 .shell:
 call shell_main
 
@@ -115,6 +117,7 @@ jmp $			; Infinite loop
 %include "multibootinfo.asm"
 %include "drivers/ata.asm"
 %include "timer.asm"
+%include "initrd.asm"
 
 ; data
 ;section .bss
