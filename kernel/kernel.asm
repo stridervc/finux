@@ -50,9 +50,12 @@ mov esp, ebp
 
 ; print kernel version
 push ebx				; preserve boot information from grub
+mov al, WHITE
+call set_color
 mov ebx, MSG_KERNEL
 call kprint
 call kprint_nl
+call reset_color
 
 pop ebx					; restore multiboot information
 cmp byte [multiboot], 1
@@ -61,20 +64,23 @@ call multiboot_info
 
 .continue:
 ; load idt
+mov al, DARKGRAY
 mov ebx, MSG_IDT
-call kprint
+call kernel_print
 lidt [idt_reg]
 call kprint_nl
 
 ; initialise PICs
+mov al, DARKGRAY
 mov ebx, MSG_PIC
-call kprint
+call kernel_print
 call init_pic
 call kprint_nl
 
 ; initialise timer
+mov al, DARKGRAY
 mov ebx, MSG_INIT_TIMER
-call kprint
+call kernel_print
 call init_timer
 call kprint_nl
 
@@ -82,8 +88,10 @@ sti				; Enable interrupts
 
 ; test ata identify
 test_ata:
+mov al, DARKGRAY
+call set_color
 mov ebx, MSG_ID_DISK
-call kprint
+call kernel_print
 call kprint_nl
 mov dx, PRIMARY_ATA_START
 mov al, 0xa0	; master disk
@@ -97,18 +105,48 @@ call kprint_hexb
 jmp .shell
 
 .drive_success:
+mov al, DARKGRAY
 mov ebx, MSG_DISK_FOUND
-call kprint
+call kernel_print
 call kprint_nl
+call reset_color
 
 call process_initrd
 
 .shell:
+call reset_color
 call shell_main
 
 jmp $			; Infinite loop
 
-%include "kprint.asm"
+; kernel print
+; prints string with '* ' prepended
+; restores color when done
+; AL = color
+; EBX = address of string
+kernel_print:
+	push dx
+	mov dx, ax		; store desired color
+	call get_color
+	push ax			; store current color
+
+	mov al, GRAY
+	call set_color
+	push ebx		; store string address
+	mov ebx, MSG_PRINT_PRE
+	call kprint
+
+	mov ax, dx
+	call set_color	; change to desired color
+	pop ebx
+	call kprint		; print string
+
+	pop ax			; restore previous color
+	call set_color
+	pop dx
+	ret
+
+%include "drivers/screen.asm"
 %include "gdt.asm"
 %include "interrupts.asm"
 %include "idt.asm"
@@ -128,5 +166,6 @@ MSG_PIC		db "Initialising PICs...", 0
 MSG_ID_DISK db "Calling ATA Identify on Primary Master...", 0
 MSG_DISK_FOUND db "Disk found", 0
 MSG_INIT_TIMER	db "Initialising timer...", 0
+MSG_PRINT_PRE	db " * ", 0
 tmp_drive_id	resw 256
 

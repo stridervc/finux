@@ -60,32 +60,42 @@ multiboot_info:
 	jmp .loop
 
 .commandline:
+	push eax
 	push ebx
 	push ebx
 
+	mov al, DARKGRAY
+	call set_color
 	mov ebx, .msgcommandline
-	call kprint
+	call kernel_print
 
 	pop ebx
 	add ebx, 8
 	call kprint
 	call kprint_nl
+	call reset_color
 
 	pop ebx
+	pop eax
 	jmp .resume
 
 .bootloader:
+	push eax
 	push ebx
 	push ebx
 
+	mov al, DARKGRAY
+	call set_color
 	mov ebx, .msgbootloader
-	call kprint
+	call kernel_print
 	pop ebx
 	add ebx, 8
 	call kprint
 	call kprint_nl
+	call reset_color
 
 	pop ebx
+	pop eax
 	jmp .resume
 
 .module:
@@ -95,8 +105,10 @@ multiboot_info:
 	mov [grub_module_present], byte 1
 
 	push ebx
+	mov al, DARKGRAY
+	call set_color
 	mov ebx, .msgmodule
-	call kprint
+	call kernel_print
 	pop ebx
 
 	add ebx, 8		; start addr
@@ -113,6 +125,7 @@ multiboot_info:
 	mov eax, dword [ebx]
 	call kprint_hexd
 	call kprint_nl
+	call reset_color
 	mov [grub_module_end], dword eax
 
 	pop ebx
@@ -120,6 +133,7 @@ multiboot_info:
 	jmp .resume
 
 .meminfo:
+	push eax
 	push ecx
 	push edx
 	push ebx
@@ -127,8 +141,9 @@ multiboot_info:
 	push ebx
 	push ebx
 
+	mov al, GRAY
 	mov ebx, .msglower
-	call kprint
+	call kernel_print
 	pop ebx
 	mov eax, [ebx+8]
 	inc eax
@@ -137,8 +152,9 @@ multiboot_info:
 	call kprint
 	call kprint_nl
 
+	mov al, GRAY
 	mov ebx, .msgupper
-	call kprint
+	call kernel_print
 	pop ebx
 	mov eax, [ebx+12]
 	mov edx, 0			; high part of dividend
@@ -148,10 +164,12 @@ multiboot_info:
 	mov ebx, .msgupperpost
 	call kprint
 	call kprint_nl
+	call reset_color
 
 	pop ebx
 	pop edx
 	pop ecx
+	pop eax
 	jmp .resume
 
 .bootdevice:
@@ -159,9 +177,11 @@ multiboot_info:
 	push ebx
 
 	; print message
+	mov al, DARKGRAY
+	call set_color
 	push ebx
 	mov ebx, .msgbootdevice
-	call kprint
+	call kernel_print
 	pop ebx
 
 	add ebx, 8		; point to biosdev
@@ -188,6 +208,7 @@ multiboot_info:
 	mov [grub_boot_subpartition], eax
 
 	call kprint_nl
+	call reset_color
 
 	pop ebx
 	pop eax
@@ -197,8 +218,10 @@ multiboot_info:
 	pusha
 
 	push ebx
+	mov al, DARKGRAY
+	call set_color
 	mov ebx, .msgacpi
-	call kprint
+	call kernel_print
 	pop ebx
 
 	; OEM ID
@@ -232,6 +255,7 @@ multiboot_info:
 
 .continue:
 	call kprint_nl
+	call reset_color
 	popa
 	jmp .resume
 
@@ -243,7 +267,7 @@ multiboot_info:
 	.msglowerpost db "K", 0
 	.msgupper db "Upper memory: ", 0
 	.msgupperpost db "M", 0
-	.msgbootloader db "Bootloader was: ", 0
+	.msgbootloader db "Bootloader: ", 0
 	.msgcommandline db "Command line: ", 0
 	.msgacpi db "ACPI Vendor: ", 0
 	.msgacpivendor db "      ", 0

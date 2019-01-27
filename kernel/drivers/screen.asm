@@ -10,6 +10,30 @@ LGRAY_ON_BLACK	equ 0x07
 SCREEN_CTRL		equ 0x3d4
 SCREEN_DATA		equ 0x3d5
 
+; low 4 bits is foreground
+; high 3 bits is background
+
+; colors
+BLACK			equ 0
+BLUE			equ 1
+GREEN			equ 2
+CYAN			equ 3
+RED				equ 4
+PURPLE			equ 5
+BROWN			equ 6
+GRAY			equ 7
+DARKGRAY		equ 8
+LIGHTBLUE		equ 9
+LIGHTGREEN		equ 10
+LIGHTCYAN		equ 11
+LIGHTRED		equ 12
+LIGHTPURPLE		equ 13
+YELLOW			equ 14
+WHITE			equ 15
+
+; variables
+screen_color	db LGRAY_ON_BLACK		; current color
+
 ; Get cursor offset, return in AX
 get_cursor:
 	push dx
@@ -71,7 +95,7 @@ set_cursor:
 ; at current cursor position
 kprint:
 	pusha
-	mov dh, LGRAY_ON_BLACK
+	mov dh, [screen_color]
 	
 .kprint_loop:
 	mov dl, [ebx]			; Char to print
@@ -348,5 +372,23 @@ kprint_dec:
 .ret:
 	popa
 	ret
+
 	.msgdec db "4294967296", 0
 	.divisor dd 0
+
+; return current color in AL
+get_color:
+	mov al, [screen_color]
+	ret
+
+; set color to value in AL
+set_color:
+	mov [screen_color], al
+	ret
+
+; reset color to lightgray on black
+reset_color
+	mov al, GRAY
+	call set_color
+	ret
+
