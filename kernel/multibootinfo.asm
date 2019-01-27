@@ -5,6 +5,19 @@
 multiboot_info:
 	pusha
 
+	push ebx
+	mov al, YELLOW
+	mov ebx, msg_multiboot
+	call kernel_print
+	
+	mov al, WHITE
+	call set_color
+	mov ebx, msg_brackets
+	call kprint
+	call kprint_nl
+	call reset_color
+
+	pop ebx
 	; get size of boot information
 	;mov ecx, [ebx]
 
@@ -260,6 +273,7 @@ multiboot_info:
 	jmp .resume
 
 .ret:
+	call kprint_nl
 	popa
 	ret
 
@@ -285,4 +299,7 @@ grub_boot_subpartition dd 0
 grub_module_present	db 0
 grub_module_start	dd 0
 grub_module_end		dd 0
+
+msg_multiboot	db "multiboot_info", 0
+msg_brackets	db "()", 0
 
